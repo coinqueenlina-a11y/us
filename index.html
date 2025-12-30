@@ -262,7 +262,7 @@
     </div>
 
     <!-- Header -->
-    <header class="glass-header h-20 flex items-center px-6 lg:px-12 sticky top-[44px] z-50">
+    <header class="glass-header h-20 flex items-center px-6 lg:px-12 sticky top-[44px] z-50" id="main-header">
         <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
             <div class="flex items-center space-x-2.5 cursor-pointer" onclick="location.reload()">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-purple-800 flex items-center justify-center shadow-lg">
@@ -273,12 +273,8 @@
             
             <div class="header-notice-container">
                 <i class="fas fa-volume-up text-purple-400 mr-4 text-xs"></i>
-                <div class="header-notice-list">
-                    <div class="header-notice-item">리나닷컴 공식 파트너사 비트겟 요율 상향 조정 완료!</div>
-                    <div class="header-notice-item">실시간 환급 시스템 정기 점검 안내 (04:00~05:00)</div>
-                    <div class="header-notice-item">UID 연결이 안 될 경우 1:1 상담창을 이용해주세요.</div>
-                    <div class="header-notice-item">바이비트 수수료 25% 즉시 페이백 이벤트 중</div>
-                    <div class="header-notice-item">리나닷컴 공식 파트너사 비트겟 요율 상향 조정 완료!</div>
+                <div class="header-notice-list" id="header-ticker">
+                    <!-- 파이어베이스 데이터로 동적 생성됨 -->
                 </div>
             </div>
         </div>
@@ -351,7 +347,6 @@
                     <p class="text-sm text-white/80 font-medium mt-1">업계 최고 요율 보장, 오직 리나닷컴에서만 가능합니다.</p>
                 </div>
             </div>
-            <!-- onclick 이벤트 추가: 페이백 계산기 모달을 열도록 수정 -->
             <button onclick="openModal('calc-modal')" class="bg-white text-sky-600 font-black px-10 py-4 rounded-xl shadow-xl hover:bg-gray-100 transition-all text-base flex items-center gap-3 whitespace-nowrap">
                 81% 혜택받기 <i class="fas fa-chevron-right text-sm"></i>
             </button>
@@ -403,29 +398,153 @@
         </div>
     </div>
 
-    <script>
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; if (id === 'calc-modal') calculatePayback(); }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        
-        function scrollToExchanges() {
-            closeModal('calc-modal');
-            const target = document.getElementById('exchanges');
-            if (target) target.scrollIntoView({ behavior: 'smooth' });
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'linapay-web';
+
+        // Global functions
+        window.openModal = (id) => { document.getElementById(id).style.display = 'flex'; if (id === 'calc-modal') calculatePayback(); };
+        window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
+        window.scrollToExchanges = () => { closeModal('calc-modal'); document.getElementById('exchanges').scrollIntoView({ behavior: 'smooth' }); };
+
+        // 1. Auth First Strategy (RULE 3)
+        const initFirebaseSync = async () => {
+            try {
+                // Perform authentication and await it
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Setup listener ONLY after auth is successful
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        setupFirestoreListener();
+                    }
+                });
+            } catch (error) {
+                console.error("Auth Initialization Error:", error);
+            }
+        };
+
+        // 2. Setup Firestore Listener (Strict Paths RULE 1)
+        const setupFirestoreListener = () => {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'global');
+            
+            onSnapshot(docRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.data();
+                    syncUIFromFirestore(data);
+                }
+            }, (error) => {
+                console.error("Firestore Permission/Sync Error:", error);
+                // If permission denied, likely the path is wrong or security rules haven't propagated
+            });
+        };
+
+        function syncUIFromFirestore(data) {
+            const h = data.home || {};
+            const exchanges = data.exchanges || [];
+
+            // 1. Top Notice Bar
+            const noticeText = document.getElementById('top-notice-text');
+            const noticeEx = document.getElementById('top-notice-exchange');
+            const noticeAct = document.getElementById('top-notice-action');
+            if(noticeText) noticeText.innerText = h.topText || "지금 바이낸스 페이백 원해?";
+            if(noticeEx) noticeEx.innerText = h.topExchange || "바이낸스";
+            if(noticeAct) noticeAct.innerText = h.topAction || "지금 연결";
+            
+            const banner = document.getElementById('top-notice-container');
+            const header = document.getElementById('main-header');
+            if (h.topHide) {
+                banner.classList.add('hidden-element');
+                header.style.top = '0';
+            } else {
+                banner.classList.remove('hidden-element');
+                header.style.top = '44px';
+            }
+
+            // 2. Header Ticker
+            const ticker = document.getElementById('header-ticker');
+            if(ticker) {
+                ticker.innerHTML = '';
+                const messages = [
+                    `리나닷컴 공식 파트너사 ${exchanges[0]?.name || '비트겟'} 요율 상향 조정 완료!`,
+                    "실시간 환급 시스템 정기 점검 안내 (04:00~05:00)",
+                    "UID 연결이 안 될 경우 1:1 상담창을 이용해주세요.",
+                    `지원 거래소: ${h.calcExchanges || 'Binance, Bitget, Bybit'}`
+                ];
+                messages.forEach(msg => {
+                    const item = document.createElement('div');
+                    item.className = "header-notice-item";
+                    item.innerText = msg;
+                    ticker.appendChild(item);
+                });
+            }
+
+            // 3. Exchange Grid
+            renderExchangeGrid(exchanges);
+            updateCalculatorOptions(exchanges);
         }
 
-        function calculatePayback() {
+        function renderExchangeGrid(exchanges) {
+            const container = document.getElementById('exchange-grid');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            exchanges.forEach(ex => {
+                const card = document.createElement('div');
+                card.className = "exchange-card p-8 flex flex-col items-center text-center relative overflow-hidden group";
+                card.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-b from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-20 h-20 bg-white/5 rounded-3xl p-4 mb-8 flex items-center justify-center relative z-10">
+                        <img src="${ex.logo}" class="max-h-full object-contain" onerror="this.src='https://via.placeholder.com/80'">
+                    </div>
+                    <h3 class="text-2xl font-black mb-2 relative z-10">${ex.name}</h3>
+                    <p class="text-xl font-black text-sky-400 mb-8 relative z-10">${ex.rate}% 페이백</p>
+                    <a href="${ex.link || '#'}" target="_blank" class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white hover:text-gray-900 transition-all relative z-10 text-center">연결하기</a>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function updateCalculatorOptions(exchanges) {
+            const select = document.getElementById('calc-exchange');
+            if (!select) return;
+            select.innerHTML = '';
+            exchanges.forEach(ex => {
+                const opt = document.createElement('option');
+                opt.value = 0.0004; 
+                opt.innerText = `${ex.name} (${ex.rate}% 혜택)`;
+                select.appendChild(opt);
+            });
+        }
+
+        window.calculatePayback = () => {
             const seed = parseFloat(document.getElementById('calc-seed').value) || 0;
             const leverage = parseFloat(document.getElementById('calc-lev').value) || 0;
             const counts = parseInt(document.getElementById('calc-count').value) || 0;
             const feeRate = parseFloat(document.getElementById('calc-exchange').value) || 0;
-            document.getElementById('count-display').innerText = counts + '회';
+            const display = document.getElementById('count-display');
+            if(display) display.innerText = counts + '회';
             const res = (seed * leverage * 2 * counts * feeRate * 30 * 0.5);
-            document.getElementById('result-val').innerText = res.toLocaleString(undefined, {minimumFractionDigits: 2});
-        }
+            const resEl = document.getElementById('result-val');
+            if(resEl) resEl.innerText = res.toLocaleString(undefined, {minimumFractionDigits: 2});
+        };
 
-        function openStatusModal() {
+        window.openStatusModal = () => {
             const feed = document.getElementById('status-feed');
             openModal('status-modal');
+            if(!feed) return;
             feed.innerHTML = '';
             const history = [
                 { user: "user***32", amount: "254.12", exchange: "Bitget" },
@@ -438,53 +557,9 @@
                 div.innerHTML = `<div><p class="text-xs font-bold">${item.user}</p><p class="text-[10px] text-white/40">${item.exchange}</p></div><div class="text-right"><p class="text-sm font-black text-purple-400">${item.amount} USDT</p></div>`;
                 feed.appendChild(div);
             });
-        }
-
-        function renderExchanges() {
-            const container = document.getElementById('exchange-grid');
-            if(!container) return;
-
-            let exchanges = [
-                { name: 'Bitget', rate: 81, logo: 'https://raw.githubusercontent.com/talmobottle1-boop/newtank26/main/assets/images/bitget.png', color: 'from-[#00f0ff]/20' },
-                { name: 'Binance', rate: 30, logo: 'https://raw.githubusercontent.com/talmobottle1-boop/newtank26/main/assets/images/binance.png', color: 'from-[#f3ba2f]/20' },
-                { name: 'Bybit', rate: 25, logo: 'https://cdn.worldvectorlogo.com/logos/bybit-logo.svg', color: 'from-[#f0b90b]/20' }
-            ];
-
-            const savedConfig = localStorage.getItem('lina_config');
-            if (savedConfig) {
-                const config = JSON.parse(savedConfig);
-                exchanges = config.exchanges;
-                
-                // Update Top Sticky Notice
-                document.getElementById('top-notice-text').innerText = config.home.topText;
-                document.getElementById('top-notice-exchange').innerText = config.home.topExchange;
-                document.getElementById('top-notice-action').innerText = config.home.topAction;
-                
-                if (config.home.topHide) {
-                    document.getElementById('top-notice-container').classList.add('hidden-element');
-                } else {
-                    document.getElementById('top-notice-container').classList.remove('hidden-element');
-                }
-            }
-
-            container.innerHTML = '';
-            exchanges.forEach(ex => {
-                const card = document.createElement('div');
-                card.className = "exchange-card p-8 flex flex-col items-center text-center relative overflow-hidden group";
-                card.innerHTML = `
-                    <div class="absolute inset-0 bg-gradient-to-b ${ex.color} to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <div class="w-20 h-20 bg-white/5 rounded-3xl p-4 mb-8 flex items-center justify-center relative z-10"><img src="${ex.logo}" class="max-h-full object-contain" onerror="this.src='https://via.placeholder.com/80'"></div>
-                    <h3 class="text-2xl font-black mb-2 relative z-10">${ex.name}</h3>
-                    <p class="text-xl font-black text-sky-400 mb-8 relative z-10">${ex.rate}% 페이백</p>
-                    <button class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white hover:text-gray-900 transition-all relative z-10">연결하기</button>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        window.onload = function() {
-            renderExchanges();
         };
+
+        window.onload = initFirebaseSync;
     </script>
 </body>
 </html>

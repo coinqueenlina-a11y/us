@@ -80,19 +80,19 @@
 <body class="min-h-screen">
     <div class="bg-mesh"></div>
 
-    <!-- Top Notice Popup -->
-    <div id="top-notice-container" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 py-2.5 px-4 sticky top-0 z-[60] text-center hidden-element">
+    <!-- Top Notice Popup (Controlled by Dashboard) -->
+    <div id="top-notice-container" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 py-2.5 px-4 sticky top-0 z-[60] text-center">
         <div class="max-w-7xl mx-auto flex items-center justify-center space-x-3">
             <span class="text-[10px] font-black bg-white/20 px-1.5 py-0.5 rounded uppercase tracking-tighter">Event</span>
-            <p id="top-notice-text" class="text-xs sm:text-sm font-bold text-white tracking-tight"></p>
+            <p id="top-notice-text" class="text-xs sm:text-sm font-bold text-white tracking-tight">지금 바이낸스 페이백 원해?</p>
             <a id="top-notice-link" href="#" class="bg-white text-purple-600 text-[10px] sm:text-xs font-black px-3 py-1 rounded-full shadow-lg hover:scale-105 transition-transform">
-                <span id="top-notice-exchange"></span> <span id="top-notice-action"></span>
+                <span id="top-notice-exchange">바이낸스</span> <span id="top-notice-action">지금 연결</span>
             </a>
         </div>
     </div>
 
     <!-- Header -->
-    <header class="glass-header h-20 flex items-center px-6 lg:px-12 sticky top-0 z-50" id="main-header">
+    <header class="glass-header h-20 flex items-center px-6 lg:px-12 sticky top-[44px] z-50">
         <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
             <div class="flex items-center space-x-2.5">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-purple-800 flex items-center justify-center shadow-lg">
@@ -100,10 +100,11 @@
                 </div>
                 <span class="text-xl font-bold italic tracking-tighter">리나<span class="text-purple-500">닷컴</span></span>
             </div>
-            <nav class="hidden md:flex items-center space-x-8 text-sm font-bold text-white/60">
+            <!-- 상단 메뉴 3개 숨김 처리 (hidden 클래스 적용) -->
+            <nav class="hidden items-center space-x-8 text-sm font-bold text-white/60">
                 <a href="#" class="hover:text-white transition-colors">홈</a>
                 <a href="#exchanges" class="hover:text-white transition-colors">제휴 거래소</a>
-                <a href="dashboard.html" class="text-purple-400 hover:text-purple-300">ADMIN</a>
+                <a href="dashboard.html" class="text-purple-400 hover:text-purple-300">관리자 대시보드</a>
             </nav>
             <button class="px-5 py-2.5 bg-white/5 border border-white/10 rounded-full text-xs font-black hover:bg-white/10 transition-all">
                 UID 조회하기
@@ -138,13 +139,13 @@
                 </div>
             </div>
 
-            <!-- Right Visual (Floating Card) -->
+            <!-- Right Visual (Controlled by Dashboard) -->
             <div class="relative">
                 <div id="main-floating-card" class="floating-card glass-card p-8 rounded-[40px] bg-white/5 border border-white/10 backdrop-blur-xl relative z-20">
                     <div class="flex justify-between items-start mb-12">
                         <div>
-                            <h3 id="card-title" class="text-xl font-bold mb-1">불러오는 중...</h3>
-                            <p id="card-desc" class="text-xs text-white/40">잠시만 기다려주세요</p>
+                            <h3 id="card-title" class="text-xl font-bold mb-1">리나닷컴 필수 페이백</h3>
+                            <p id="card-desc" class="text-xs text-white/40">매수와 매도 수수료 돌려받기</p>
                         </div>
                         <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
                             <i class="fas fa-shield-alt"></i>
@@ -152,7 +153,7 @@
                     </div>
                     <div class="flex justify-center py-10">
                         <div id="card-logo-container" class="w-24 h-24 rounded-full border-4 border-purple-500/30 flex items-center justify-center animate-[spin_4s_linear_infinite]">
-                            <span id="card-logo-text" class="text-4xl font-black italic">L</span>
+                            <span id="card-logo-text" class="text-4xl font-black italic">b</span>
                         </div>
                     </div>
                     <div class="mt-12 p-5 bg-white/5 rounded-2xl border border-white/5">
@@ -170,12 +171,12 @@
         </div>
     </section>
 
-    <!-- Custom Banner -->
-    <section id="custom-banner-section" class="max-w-7xl mx-auto px-6 mb-24 hidden-element">
-        <div id="custom-banner-bg" class="w-full p-8 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
+    <!-- Custom Banner (Controlled by Dashboard) -->
+    <section id="custom-banner-section" class="max-w-7xl mx-auto px-6 mb-24">
+        <div id="custom-banner-bg" class="w-full p-8 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative" style="background-color: #67e8f9;">
             <div class="relative z-10">
-                <span id="banner-badge" class="px-3 py-1 bg-black/10 rounded-full text-[10px] font-black uppercase mb-3 inline-block"></span>
-                <h2 id="banner-title" class="text-2xl md:text-3xl font-black text-black leading-tight"></h2>
+                <span id="banner-badge" class="px-3 py-1 bg-black/10 rounded-full text-[10px] font-black uppercase mb-3 inline-block">리나닷컴 한정 이벤트</span>
+                <h2 id="banner-title" class="text-2xl md:text-3xl font-black text-black leading-tight">Bitget 수수료 81%<br>역대 최고 페이백</h2>
             </div>
             <div class="flex items-center space-x-4 relative z-10">
                 <button class="px-8 py-4 bg-black text-white rounded-2xl font-bold hover:scale-105 transition-transform">지금 확인</button>
@@ -183,20 +184,26 @@
                     <i id="banner-icon" class="fas fa-bolt"></i>
                 </div>
             </div>
+            <!-- Decorative Icon -->
             <i class="fas fa-coins absolute -bottom-10 -right-10 text-[180px] text-black/5 rotate-12"></i>
         </div>
     </section>
 
-    <!-- Exchange Grid -->
+    <!-- Exchange Grid (Controlled by Dashboard) -->
     <section id="exchanges" class="max-w-7xl mx-auto px-6 py-20">
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
             <div class="space-y-4">
                 <h2 class="text-4xl font-bold tracking-tight">제휴 거래소</h2>
-                <p class="text-white/40 max-w-sm font-medium">실시간 데이터 연동으로 가장 정확한 요율을 제공합니다.</p>
+                <p class="text-white/40 max-w-sm font-medium">리나닷컴이 엄선한 신뢰할 수 있는 글로벌 거래소 리스트입니다.</p>
+            </div>
+            <div class="flex space-x-2">
+                <button class="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all"><i class="fas fa-arrow-left"></i></button>
+                <button class="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all"><i class="fas fa-arrow-right text-purple-400"></i></button>
             </div>
         </div>
+
         <div id="exchange-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- JS Injected -->
+            <!-- Exchanges will be injected here via JavaScript -->
         </div>
     </section>
 
@@ -209,116 +216,127 @@
                         <div class="w-8 h-8 rounded-xl bg-purple-500 flex items-center justify-center"><i class="fas fa-infinity text-white text-xs"></i></div>
                         <span class="text-lg font-bold italic tracking-tighter">리나<span class="text-purple-500">닷컴</span></span>
                     </div>
-                    <p class="text-white/30 text-xs max-w-xs leading-relaxed font-medium">리나닷컴은 투명한 페이백 시스템을 지향합니다.</p>
+                    <p class="text-white/30 text-xs max-w-xs leading-relaxed font-medium">리나닷컴은 사용자가 지불한 거래 수수료를 투명하게 돌려드리는 테더 페이백 전문 플랫폼입니다.</p>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-12 sm:gap-24">
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-purple-400">Service</h4>
+                        <ul class="text-xs space-y-3 font-bold text-white/50">
+                            <li><a href="#" class="hover:text-white">이용 안내</a></li>
+                            <li><a href="#" class="hover:text-white">페이백 계산기</a></li>
+                            <li><a href="#" class="hover:text-white">고객센터</a></li>
+                        </ul>
+                    </div>
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-purple-400">Legal</h4>
+                        <ul class="text-xs space-y-3 font-bold text-white/50">
+                            <li><a href="#" class="hover:text-white">이용약관</a></li>
+                            <li><a href="#" class="hover:text-white">개인정보처리방침</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-            <div class="flex justify-between items-center text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">
                 <p>© 2025 LinaDotCom. All Rights Reserved.</p>
+                <div class="flex space-x-6">
+                    <a href="#"><i class="fab fa-telegram-plane text-sm"></i></a>
+                    <a href="#"><i class="fab fa-twitter text-sm"></i></a>
+                </div>
             </div>
         </div>
     </footer>
 
-    <!-- Mini Bottom Popup -->
-    <div id="mini-popup" class="fixed bottom-6 right-6 z-[100] group hidden-element">
+    <!-- Mini Bottom Popup (Controlled by Dashboard) -->
+    <div id="mini-popup" class="fixed bottom-6 right-6 z-[100] group">
         <div class="bg-white rounded-3xl p-4 pl-6 shadow-2xl flex items-center space-x-6 transform transition-all hover:scale-105 active:scale-95 border-4 border-purple-500/20">
             <div class="text-left">
-                <p id="mini-sub-text" class="text-[9px] font-black text-purple-500 uppercase tracking-tighter"></p>
-                <p id="mini-main-text" class="text-sm font-black text-gray-900 leading-none mt-0.5"></p>
+                <p id="mini-sub-text" class="text-[9px] font-black text-purple-500 uppercase tracking-tighter">Check My Payback</p>
+                <p id="mini-main-text" class="text-sm font-black text-gray-900 leading-none mt-0.5">환급액 1분 확인</p>
             </div>
             <button id="mini-btn-text" class="bg-gray-900 text-white px-5 py-3 rounded-2xl text-xs font-black shadow-lg">시작</button>
         </div>
     </div>
 
-    <!-- Firebase Integration -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <script>
+        // --- Data Integration Logic ---
 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'lina-payback-system';
-
-        // Auth initialization (Rule 3)
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-        initAuth();
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                syncSiteData();
-            }
-        });
-
-        function syncSiteData() {
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'main');
-            
-            onSnapshot(docRef, (snap) => {
-                if (snap.exists()) {
-                    updateUI(snap.data());
+        function initHome() {
+            // 1. Top Notice Sync
+            const homeData = JSON.parse(localStorage.getItem('lina_home_settings'));
+            if (homeData) {
+                const container = document.getElementById('top-notice-container');
+                if (homeData.topHide) {
+                    container.classList.add('hidden-element');
+                } else {
+                    container.classList.remove('hidden-element');
+                    document.getElementById('top-notice-text').innerText = homeData.topText;
+                    document.getElementById('top-notice-exchange').innerText = homeData.topExchange;
+                    document.getElementById('top-notice-action').innerText = homeData.topAction;
                 }
-            }, (err) => console.error("Sync Error:", err));
+            }
+
+            // 2. Banner & Floating Card Sync
+            const bannerData = JSON.parse(localStorage.getItem('lina_banner_settings'));
+            if (bannerData) {
+                // Custom Banner
+                const bannerSection = document.getElementById('custom-banner-section');
+                if (bannerData.bannerHide) {
+                    bannerSection.classList.add('hidden-element');
+                } else {
+                    bannerSection.classList.remove('hidden-element');
+                    document.getElementById('banner-title').innerHTML = bannerData.bannerTitle.replace('\n', '<br>');
+                    document.getElementById('banner-badge').innerText = bannerData.bannerBadge;
+                    document.getElementById('custom-banner-bg').style.backgroundColor = bannerData.bannerBg;
+                    document.getElementById('banner-icon').className = `fas ${bannerData.bannerIcon}`;
+                }
+
+                // Floating Card
+                document.getElementById('card-title').innerText = bannerData.cardTitle;
+                document.getElementById('card-desc').innerText = bannerData.cardDesc;
+                document.getElementById('card-logo-text').innerText = bannerData.cardLogo;
+                document.getElementById('card-logo-container').style.animationDuration = bannerData.cardAnim;
+                if(bannerData.cardAnim === 'none') {
+                    document.getElementById('card-logo-container').style.animation = 'none';
+                }
+            }
+
+            // 3. Mini Popup Sync
+            const miniData = JSON.parse(localStorage.getItem('lina_mini_settings'));
+            if (miniData) {
+                const mini = document.getElementById('mini-popup');
+                if (miniData.miniHide) {
+                    mini.classList.add('hidden-element');
+                } else {
+                    mini.classList.remove('hidden-element');
+                    document.getElementById('mini-main-text').innerText = miniData.miniMain;
+                    document.getElementById('mini-sub-text').innerText = miniData.miniSub;
+                    document.getElementById('mini-btn-text').innerText = miniData.miniBtn;
+                }
+            }
+
+            // 4. Exchange Grid Render
+            renderExchanges();
         }
 
-        function updateUI(data) {
-            // 1. Top Notice
-            const topBar = document.getElementById('top-notice-container');
-            const header = document.getElementById('main-header');
-            if (data.top?.hide) {
-                topBar.classList.add('hidden-element');
-                header.style.top = '0';
-            } else {
-                topBar.classList.remove('hidden-element');
-                header.style.top = '44px';
-                document.getElementById('top-notice-text').innerText = data.top.text;
-                document.getElementById('top-notice-exchange').innerText = data.top.exchange;
-                document.getElementById('top-notice-action').innerText = data.top.action;
-            }
+        function renderExchanges() {
+            const container = document.getElementById('exchange-grid');
+            const savedEx = JSON.parse(localStorage.getItem('lina_exchange_list'));
+            
+            // 기본값 (설정이 없을 경우 대비)
+            const defaultEx = [
+                { id: 1, name: 'Bitget', rate: 81, color: 'from-[#00f0ff]/20', logo: 'https://cdn.worldvectorlogo.com/logos/bitget-logo.svg', link: '#' },
+                { id: 2, name: 'Binance', rate: 30, color: 'from-[#f3ba2f]/20', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Binance_Logo.svg', link: '#' },
+                { id: 3, name: 'Bybit', rate: 25, color: 'from-[#f0b90b]/20', logo: 'https://cdn.worldvectorlogo.com/logos/bybit-logo.svg', link: '#' }
+            ];
 
-            // 2. Banner
-            const bannerSec = document.getElementById('custom-banner-section');
-            if (data.banner?.hide) {
-                bannerSec.classList.add('hidden-element');
-            } else {
-                bannerSec.classList.remove('hidden-element');
-                document.getElementById('banner-title').innerHTML = data.banner.title;
-                document.getElementById('banner-badge').innerText = data.banner.badge;
-                document.getElementById('custom-banner-bg').style.backgroundColor = data.banner.bg;
-                document.getElementById('banner-icon').className = `fas ${data.banner.icon}`;
-            }
+            const list = savedEx || defaultEx;
+            container.innerHTML = '';
 
-            // 3. Floating Card
-            document.getElementById('card-title').innerText = data.card.title;
-            document.getElementById('card-desc').innerText = data.card.desc;
-            document.getElementById('card-logo-text').innerText = data.card.logo;
-
-            // 4. Mini Popup
-            const mini = document.getElementById('mini-popup');
-            if (data.mini?.hide) {
-                mini.classList.add('hidden-element');
-            } else {
-                mini.classList.remove('hidden-element');
-                document.getElementById('mini-main-text').innerText = data.mini.main;
-                document.getElementById('mini-sub-text').innerText = data.mini.sub;
-                document.getElementById('mini-btn-text').innerText = data.mini.btn;
-            }
-
-            // 5. Exchange Grid
-            renderExchanges(data.exchanges || []);
-        }
-
-        function renderExchanges(list) {
-            const grid = document.getElementById('exchange-grid');
-            grid.innerHTML = list.map(ex => `
-                <div class="exchange-card p-8 flex flex-col items-center text-center relative overflow-hidden group">
-                    <div class="absolute inset-0 bg-gradient-to-b ${ex.color || 'from-purple-500/10'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            list.forEach(ex => {
+                const card = document.createElement('div');
+                card.className = "exchange-card p-8 flex flex-col items-center text-center relative overflow-hidden group";
+                card.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-b ${ex.color} to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div class="w-20 h-20 bg-white/5 rounded-3xl p-4 mb-8 flex items-center justify-center relative z-10">
                         <img src="${ex.logo}" onerror="this.src='https://via.placeholder.com/60?text=${ex.name}'" class="max-h-full">
                     </div>
@@ -330,9 +348,18 @@
                     <a href="${ex.link}" class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white text-gray-400 hover:text-gray-900 transition-all relative z-10">
                         연결하기
                     </a>
-                </div>
-            `).join('');
+                `;
+                container.appendChild(card);
+            });
         }
+
+        // Initialize on Load
+        window.onload = initHome;
+
+        // Listen for storage changes (다른 탭에서 대시보드 조작 시 실시간 반영)
+        window.addEventListener('storage', (e) => {
+            initHome();
+        });
     </script>
 </body>
 </html>

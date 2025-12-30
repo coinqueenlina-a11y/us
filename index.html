@@ -205,7 +205,7 @@
         </div>
     </div>
 
-    <!-- 2. Original Top Notice (Hidden by default, used by Dashboard) -->
+    <!-- 2. Original Top Notice (Firestore 동기화용) -->
     <div id="top-notice-container" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 py-2.5 px-4 fixed left-0 z-[60] text-center hidden-element">
         <div class="max-w-7xl mx-auto flex items-center justify-center space-x-3">
             <span class="text-[10px] font-black bg-white/20 px-1.5 py-0.5 rounded uppercase tracking-tighter text-white">Notice</span>
@@ -301,7 +301,7 @@
             <div class="header-notice-container hidden md:flex">
                 <i class="fas fa-volume-up text-purple-400 mr-4 text-xs"></i>
                 <div class="header-notice-list" id="header-ticker">
-                    <!-- Dynamic Notices from Dashboard -->
+                    <div class="header-notice-item">리나닷컴에 오신 것을 환영합니다.</div>
                 </div>
             </div>
         </div>
@@ -393,7 +393,8 @@
                 <p class="text-white/40 max-w-sm font-medium">리나닷컴과 함께하는 글로벌 메이저 거래소 요율입니다.</p>
             </div>
             <div id="exchange-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div class="col-span-full py-20 text-center opacity-30">
+                <!-- Data will be injected here -->
+                <div class="col-span-full py-20 text-center opacity-30" id="loading-spinner">
                     <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
                     <p>데이터를 불러오는 중입니다...</p>
                 </div>
@@ -432,6 +433,7 @@
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // Firebase Setup
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -440,6 +442,7 @@
 
         let currentExchanges = [];
 
+        // Auth Logic
         const initAuthAndSync = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -450,24 +453,31 @@
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        startFirestoreSync(user);
+                        startFirestoreSync();
                     }
                 });
             } catch (err) {
-                console.error("Auth init failed", err);
+                console.error("Auth failed:", err);
+                showErrorMessage("인증에 실패했습니다. 페이지를 새로고침 해주세요.");
             }
         };
 
-        function startFirestoreSync(user) {
+        // 실시간 동기화 시작 (경로 확인: /artifacts/{appId}/public/data/configs/global)
+        function startFirestoreSync() {
             const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'global');
             
             onSnapshot(configRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.data();
+                    console.log("Firestore Data Received:", data); // 디버깅용 로그
                     updateUIFromDashboard(data);
+                } else {
+                    console.warn("Document does not exist at the path.");
+                    showErrorMessage("설정 데이터가 없습니다. 대시보드에서 먼저 저장해주세요.");
                 }
             }, (err) => {
-                console.error("Sync error:", err);
+                console.error("Firestore sync error:", err);
+                showErrorMessage("데이터 연결 오류가 발생했습니다.");
             });
         }
 
@@ -475,52 +485,35 @@
             const h = data.home || {};
             adjustLayoutHeights();
             
+            // Notice Bar Control
             const banner = document.getElementById('top-notice-container');
-            const header = document.getElementById('main-header');
-            const topBar = document.getElementById('top-bar-promo');
-
             if (h.topText && !h.topHide) {
                 banner.classList.remove('hidden-element');
                 document.getElementById('top-notice-text').innerText = h.topText;
                 document.getElementById('top-notice-exchange').innerText = h.topExchange || '거래소';
-                document.getElementById('top-notice-action').innerText = h.topAction || '혜택받기';
+                document.getElementById('top-notice-action').innerText = h.topAction || '참여하기';
             } else {
                 banner.classList.add('hidden-element');
             }
 
+            // Stat Update
             const totalVal = h.totalAmount ? Number(h.totalAmount).toLocaleString() : "12,450,230";
             document.getElementById('hero-stat-amount').innerHTML = `${totalVal} <span class="text-sm font-normal text-white/30 ml-1">USDT</span>`;
             document.getElementById('total-payback-stat').innerText = `누적 환급액: ${totalVal} USDT`;
 
+            // Ticker Update
             const ticker = document.getElementById('header-ticker');
             if (data.notices && data.notices.length > 0) {
                 ticker.innerHTML = data.notices.map(msg => `<div class="header-notice-item">${msg}</div>`).join('');
-            } else {
-                ticker.innerHTML = `<div class="header-notice-item">업계 최고 페이백 보장 리나닷컴</div>`;
             }
 
+            // Exchange List Update (핵심)
             if (data.exchanges && data.exchanges.length > 0) {
                 currentExchanges = data.exchanges;
                 renderExchanges(currentExchanges);
-            }
-        }
-
-        function adjustLayoutHeights() {
-            const topBar = document.getElementById('top-bar-promo');
-            const topNotice = document.getElementById('top-notice-container');
-            const header = document.getElementById('main-header');
-            
-            let currentOffset = 0;
-            
-            if (topNotice && !topNotice.classList.contains('hidden-element')) {
-                topNotice.style.top = (topBar && topBar.style.display !== 'none' ? '60px' : '0px');
-                currentOffset = parseInt(topNotice.style.top) + topNotice.offsetHeight;
             } else {
-                currentOffset = (topBar && topBar.style.display !== 'none' ? 60 : 0);
-            }
-            
-            if (header) {
-                header.style.top = currentOffset + 'px';
+                // 데이터는 왔는데 배열이 비어있는 경우
+                showErrorMessage("등록된 거래소가 없습니다.");
             }
         }
 
@@ -534,16 +527,47 @@
                     <div class="w-20 h-20 bg-white/10 rounded-3xl p-4 mb-8 flex items-center justify-center relative z-10">
                         <img src="${ex.logo || 'https://via.placeholder.com/80'}" class="max-h-full object-contain" alt="${ex.name}" onerror="this.src='https://via.placeholder.com/80'">
                     </div>
-                    <h3 class="text-2xl font-black mb-2 relative z-10">${ex.name}</h3>
-                    <p class="text-xl font-black text-sky-400 mb-8 relative z-10">${ex.rate}% 페이백</p>
+                    <h3 class="text-2xl font-black mb-2 relative z-10">${ex.name || '알 수 없는 거래소'}</h3>
+                    <p class="text-xl font-black text-sky-400 mb-8 relative z-10">${ex.rate || '0'}% 페이백</p>
                     <a href="${ex.link || '#'}" target="_blank" class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white hover:text-gray-900 transition-all relative z-10">가입하기</a>
                 </div>
             `).join('');
 
             const select = document.getElementById('calc-exchange');
             if(select) {
-                select.innerHTML = exchanges.map(ex => `<option value="${ex.rawRate || 0.0004}">${ex.name} (${ex.rate}% 혜택)</option>`).join('');
+                select.innerHTML = exchanges.map(ex => {
+                    // 계산기용 수수료 요율 (없으면 기본값 0.04% 적용)
+                    const feeRate = ex.rawRate || (parseFloat(ex.rate) / 1000) || 0.0004;
+                    return `<option value="${feeRate}">${ex.name} (${ex.rate}% 혜택)</option>`;
+                }).join('');
             }
+        }
+
+        function showErrorMessage(msg) {
+            const grid = document.getElementById('exchange-grid');
+            if(grid) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-20 text-center opacity-60">
+                        <i class="fas fa-exclamation-circle text-4xl mb-4 text-red-500"></i>
+                        <p class="font-bold">${msg}</p>
+                        <p class="text-xs mt-2 text-white/30">대시보드에서 '저장' 버튼을 눌렀는지 확인해주세요.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function adjustLayoutHeights() {
+            const topBar = document.getElementById('top-bar-promo');
+            const topNotice = document.getElementById('top-notice-container');
+            const header = document.getElementById('main-header');
+            let currentOffset = 0;
+            if (topNotice && !topNotice.classList.contains('hidden-element')) {
+                topNotice.style.top = (topBar && topBar.style.display !== 'none' ? '60px' : '0px');
+                currentOffset = parseInt(topNotice.style.top) + topNotice.offsetHeight;
+            } else {
+                currentOffset = (topBar && topBar.style.display !== 'none' ? 60 : 0);
+            }
+            if (header) header.style.top = currentOffset + 'px';
         }
 
         window.openModal = (id) => { 
@@ -552,22 +576,13 @@
             if (id === 'calc-modal') calculatePayback(); 
         };
         window.closeModal = (id) => { document.getElementById(id).style.display = 'none'; };
-        
         window.scrollToExchanges = () => { 
             closeModal('calc-modal'); 
             const target = document.getElementById('exchanges');
             if(target) target.scrollIntoView({ behavior: 'smooth' }); 
         };
-
-        window.closeTopNotice = () => {
-            document.getElementById('top-notice-container').classList.add('hidden-element');
-            adjustLayoutHeights();
-        };
-
-        window.closeTopBar = () => {
-            document.getElementById('top-bar-promo').style.display = 'none';
-            adjustLayoutHeights();
-        };
+        window.closeTopNotice = () => { document.getElementById('top-notice-container').classList.add('hidden-element'); adjustLayoutHeights(); };
+        window.closeTopBar = () => { document.getElementById('top-bar-promo').style.display = 'none'; adjustLayoutHeights(); };
 
         window.calculatePayback = () => {
             const seed = parseFloat(document.getElementById('calc-seed').value) || 0;

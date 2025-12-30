@@ -10,194 +10,124 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            background-color: #0f0a1e;
-            color: #f5f3ff;
+            background-color: #0f111a;
+            color: #e2e8f0;
         }
         .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
         }
         .input-field {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            padding: 10px 14px;
+            padding: 12px 16px;
             color: white;
             width: 100%;
             outline: none;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
         }
         .input-field:focus {
-            border-color: #a855f7;
-            background: rgba(168, 85, 247, 0.05);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
         }
-        .section-title {
-            font-size: 0.75rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #a855f7;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .btn-save {
-            background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
-            box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
-        }
-        .btn-save:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(168, 85, 247, 0.4);
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
         }
         #toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            transform: translateY(150%);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: fixed; bottom: 30px; right: 30px;
+            transform: translateY(150%); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 1000;
         }
         #toast.active { transform: translateY(0); }
     </style>
 </head>
-<body class="p-6 md:p-12 min-h-screen">
-    <div id="toast" class="bg-emerald-500 text-white px-6 py-4 rounded-2xl font-bold shadow-2xl flex items-center gap-3">
-        <i class="fas fa-check-circle"></i>
-        <span>성공적으로 저장되었습니다!</span>
+<body class="p-4 md:p-10 min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-purple-900/20 to-slate-900">
+
+    <div id="toast" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold shadow-2xl flex items-center gap-3 border border-indigo-400">
+        <i class="fas fa-check-circle text-xl"></i>
+        <span>데이터가 성공적으로 동기화되었습니다!</span>
     </div>
 
-    <div class="max-w-5xl mx-auto space-y-10">
-        <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h1 class="text-3xl font-black italic tracking-tighter">LINA <span class="text-purple-500">DASHBOARD</span></h1>
-                <p class="text-white/40 text-sm font-medium mt-1">홈페이지 구성 요소를 실시간으로 제어합니다.</p>
+    <div class="max-w-6xl mx-auto space-y-8">
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div class="space-y-1">
+                <h1 class="text-4xl font-black tracking-tighter italic text-white">LINA <span class="text-indigo-500">ADMIN</span></h1>
+                <p class="text-slate-400 text-sm font-medium">실시간 데이터 관리 및 보안 통제</p>
             </div>
-            <div id="status-badge" class="px-4 py-2 rounded-full bg-white/5 border border-white/10 flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
-                <span class="text-[10px] font-black uppercase tracking-widest text-white/40">연결 확인 중...</span>
+            
+            <div id="status-card" class="glass-panel px-5 py-3 flex items-center gap-3">
+                <div id="status-dot" class="status-dot bg-amber-500 animate-pulse"></div>
+                <span id="status-text" class="text-xs font-black uppercase tracking-widest text-slate-400">연결 시도 중...</span>
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Left Column: Site Content -->
-            <div class="lg:col-span-2 space-y-8">
-                <!-- 1. Top Notice Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div class="lg:col-span-8 space-y-8">
+                <!-- 상단 공지 -->
                 <div class="glass-panel p-8">
-                    <h2 class="section-title"><i class="fas fa-bullhorn"></i> 상단 공지 바 설정</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <label class="block">
-                                <span class="text-[10px] font-bold text-white/40 uppercase ml-1">공지 텍스트</span>
-                                <input type="text" id="top-text" class="input-field" placeholder="지금 바이낸스 페이백 원해?">
-                            </label>
-                            <label class="block">
-                                <span class="text-[10px] font-bold text-white/40 uppercase ml-1">버튼 거래소명</span>
-                                <input type="text" id="top-exchange" class="input-field" placeholder="바이낸스">
-                            </label>
-                        </div>
-                        <div class="space-y-4">
-                            <label class="block">
-                                <span class="text-[10px] font-bold text-white/40 uppercase ml-1">버튼 액션 문구</span>
-                                <input type="text" id="top-action" class="input-field" placeholder="지금 연결">
-                            </label>
-                            <div class="pt-6">
-                                <label class="flex items-center gap-3 cursor-pointer group">
-                                    <input type="checkbox" id="top-hide" class="w-5 h-5 rounded bg-white/10 border-white/20 checked:bg-purple-500">
-                                    <span class="text-sm font-bold text-white/60 group-hover:text-white transition-colors">상단 공지 바 숨기기</span>
-                                </label>
-                            </div>
-                        </div>
+                    <div class="flex items-center gap-2 mb-6 text-indigo-400">
+                        <i class="fas fa-bullhorn"></i>
+                        <h2 class="text-xs font-black uppercase tracking-wider">상단 공지사항 바</h2>
                     </div>
-                </div>
-
-                <!-- 2. Main Banner Section -->
-                <div class="glass-panel p-8">
-                    <h2 class="section-title"><i class="fas fa-ad"></i> 중간 커스텀 배너 설정</h2>
-                    <div class="grid grid-cols-1 gap-6">
-                        <label class="block">
-                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">배너 제목 (HTML 사용 가능)</span>
-                            <textarea id="banner-title" class="input-field h-24" placeholder="Bitget 수수료 81%<br>역대 최고 페이백"></textarea>
+                    <div class="space-y-5">
+                        <input type="text" id="topText" class="input-field" placeholder="공지 텍스트를 입력하세요">
+                        <label class="flex items-center gap-3 cursor-pointer group w-fit">
+                            <input type="checkbox" id="topHide" class="w-5 h-5 rounded border-slate-700 bg-slate-800 checked:bg-indigo-600">
+                            <span class="text-sm font-bold text-slate-400 group-hover:text-slate-200">공지 숨기기</span>
                         </label>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <label class="block">
-                                <span class="text-[10px] font-bold text-white/40 uppercase ml-1">배너 배지</span>
-                                <input type="text" id="banner-badge" class="input-field" placeholder="리나닷컴 한정 이벤트">
-                            </label>
-                            <label class="block">
-                                <span class="text-[10px] font-bold text-white/40 uppercase ml-1">배너 배경색 (Hex)</span>
-                                <input type="color" id="banner-bg" class="w-full h-11 rounded-xl bg-transparent border-none cursor-pointer">
-                            </label>
-                        </div>
                     </div>
                 </div>
 
-                <!-- 3. Exchange Grid Section -->
+                <!-- 거래소 관리 -->
                 <div class="glass-panel p-8">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="section-title !mb-0"><i class="fas fa-list"></i> 제휴 거래소 리스트</h2>
-                        <button onclick="addExchange()" class="px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-xl text-[10px] font-black hover:bg-purple-500/20 transition-all text-purple-400">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2 text-indigo-400">
+                            <i class="fas fa-exchange-alt"></i>
+                            <h2 class="text-xs font-black uppercase tracking-wider">제휴 거래소 관리</h2>
+                        </div>
+                        <button onclick="addExchange()" class="px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded-xl text-[10px] font-black transition-all">
                             + 거래소 추가
                         </button>
                     </div>
-                    <div id="exchange-list" class="space-y-4">
-                        <!-- Items injected by JS -->
+                    <div id="exchange-list" class="space-y-3">
+                        <p class="text-center text-slate-500 py-10 italic">연결 중입니다...</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Card & Mini Popup -->
-            <div class="space-y-8">
-                <!-- 4. Floating Card Section -->
+            <!-- 시스템 정보 및 저장 -->
+            <div class="lg:col-span-4 space-y-8">
                 <div class="glass-panel p-8">
-                    <h2 class="section-title"><i class="fas fa-layer-group"></i> 플로팅 카드 (메인 우측)</h2>
-                    <div class="space-y-4">
-                        <label class="block">
-                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">메인 제목</span>
-                            <input type="text" id="card-title" class="input-field">
-                        </label>
-                        <label class="block">
-                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">설명 문구</span>
-                            <input type="text" id="card-desc" class="input-field">
-                        </label>
-                        <label class="block">
-                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">중앙 로고 이니셜</span>
-                            <input type="text" id="card-logo" class="input-field" maxlength="1">
-                        </label>
+                    <div class="flex items-center gap-2 mb-6 text-indigo-400">
+                        <i class="fas fa-shield-alt"></i>
+                        <h2 class="text-xs font-black uppercase tracking-wider">보안 및 상태</h2>
                     </div>
-                </div>
-
-                <!-- 5. Mini Bottom Popup -->
-                <div class="glass-panel p-8">
-                    <h2 class="section-title"><i class="fas fa-comment-alt"></i> 하단 환급 팝업</h2>
-                    <div class="space-y-4">
-                        <label class="block">
-                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">메인 문구</span>
-                            <input type="text" id="mini-main" class="input-field">
-                        </label>
-                        <label class="block">
-                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">서브 문구</span>
-                            <input type="text" id="mini-sub" class="input-field">
-                        </label>
-                        <div class="pt-4">
-                            <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" id="mini-hide" class="w-5 h-5 rounded bg-white/10 border-white/20 checked:bg-purple-500">
-                                <span class="text-sm font-bold text-white/60 group-hover:text-white transition-colors">팝업 숨기기</span>
-                            </label>
+                    <div class="space-y-4 text-xs font-medium">
+                        <div class="flex justify-between py-2 border-b border-white/5">
+                            <span class="text-slate-500">인증 ID</span>
+                            <span id="auth-uid" class="text-slate-300 italic">...</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-white/5">
+                            <span class="text-slate-500">최근 동기화</span>
+                            <span id="last-update" class="text-slate-300">없음</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Save Button Container -->
-                <div class="sticky bottom-6 pt-4">
-                    <button id="save-btn" onclick="saveData()" class="btn-save w-full py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50" disabled>
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <span>홈페이지 반영하기</span>
+                <div class="sticky top-10">
+                    <button id="save-btn" onclick="saveData()" class="w-full py-5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-2xl font-black text-lg shadow-xl shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50" disabled>
+                        <i class="fas fa-save mr-2"></i>
+                        실시간 저장하기
                     </button>
-                    <p class="text-[10px] text-center text-white/20 mt-4 font-bold uppercase tracking-widest">Changes reflect instantly on main site</p>
+                    <p class="text-[10px] text-center text-slate-500 mt-4 leading-relaxed">
+                        저장 즉시 홈페이지(index.html)에 반영됩니다.<br>
+                        오류 시 파이어베이스 보안 규칙을 확인하세요.
+                    </p>
                 </div>
             </div>
         </div>
@@ -206,203 +136,171 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration (Injecting environment variables)
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // 1. Firebase 설정 초기화
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "",
+            authDomain: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: ""
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'lina-payback-system';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'linapay-web';
 
-        let currentData = null;
-        let unsubscribe = null;
+        let localData = { exchanges: [], topText: "", topHide: false };
 
-        // Update Badge UI Helper
-        const updateStatusBadge = (status) => {
-            const badge = document.getElementById('status-badge');
+        // UI 상태 업데이트
+        const setStatus = (type, text) => {
+            const dot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
             const saveBtn = document.getElementById('save-btn');
-            
-            if (status === 'connected') {
-                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-500"></div><span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">시스템 연결됨</span>`;
+
+            if (type === 'success') {
+                dot.className = "status-dot bg-emerald-500";
+                statusText.innerText = text || "정상 연결됨";
+                statusText.className = "text-[10px] font-black uppercase text-emerald-500";
                 saveBtn.disabled = false;
-            } else if (status === 'error') {
-                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px] font-black uppercase tracking-widest text-red-400">연결 오류</span>`;
-                saveBtn.disabled = true;
-            } else if (status === 'checking') {
-                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div><span class="text-[10px] font-black uppercase tracking-widest text-white/40">연결 확인 중...</span>`;
+            } else if (type === 'error') {
+                dot.className = "status-dot bg-rose-500";
+                statusText.innerText = text || "연결 오류";
+                statusText.className = "text-[10px] font-black uppercase text-rose-500";
                 saveBtn.disabled = true;
             }
         };
 
-        // 1. Authentication Layer (Rule 3)
-        const initAuth = async () => {
-            updateStatusBadge('checking');
+        /**
+         * 오류 수정: Firestore 경로는 짝수 세그먼트여야 합니다.
+         * 규칙: /artifacts/{appId}/public/data/{documentId}
+         * 이전: artifacts/appId/public/data/mainConfig (5개 - 오류)
+         * 수정: artifacts, appId, public, data, mainConfig, default (6개 - 정상)
+         */
+        const getConfigDocRef = () => {
+            return doc(db, 'artifacts', appId, 'public', 'data', 'mainConfig', 'default');
+        };
+
+        // 2. 인증 및 실시간 리스너 (RULE 3 준수)
+        const init = async () => {
             try {
+                // 인증 시도
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        document.getElementById('auth-uid').innerText = user.uid.substring(0, 10);
+                        
+                        const docRef = getConfigDocRef();
+                        
+                        onSnapshot(docRef, (snap) => {
+                            if (snap.exists()) {
+                                localData = snap.data();
+                                if (!localData.exchanges) localData.exchanges = [];
+                                syncUI(localData);
+                                document.getElementById('last-update').innerText = new Date().toLocaleTimeString();
+                                setStatus('success');
+                            } else {
+                                setStatus('success', '신규 데이터 생성 대기');
+                                renderExchanges([]);
+                            }
+                        }, (err) => {
+                            console.error("Firestore Error:", err);
+                            setStatus('error', '권한 거부 (Rules 확인)');
+                        });
+                    }
+                });
             } catch (err) {
                 console.error("Auth Error:", err);
-                updateStatusBadge('error');
+                setStatus('error', '인증 실패');
             }
         };
 
-        initAuth();
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // 인증 성공 시 데이터 동기화 시작
-                startDataSync(user);
-            } else {
-                updateStatusBadge('error');
-            }
-        });
-
-        // 2. Data Synchronization (Rule 1 & 3)
-        function startDataSync(user) {
-            if (!user) return;
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'main');
-            
-            // 실시간 리스너 연결
-            unsubscribe = onSnapshot(docRef, (snap) => {
-                // 데이터 수신이 시작되면 연결됨 상태로 변경
-                updateStatusBadge('connected');
-                
-                if (snap.exists()) {
-                    currentData = snap.data();
-                    populateForm(currentData);
-                } else {
-                    console.log("No remote config found, initializing with defaults.");
-                    currentData = {
-                        top: { text: "지금 바이낸스 페이백 원해?", exchange: "바이낸스", action: "지금 연결", hide: false },
-                        banner: { title: "Bitget 수수료 81%<br>역대 최고 페이백", badge: "리나닷컴 한정 이벤트", bg: "#67e8f9", icon: "fa-bolt", hide: false },
-                        card: { title: "리나닷컴 필수 페이백", desc: "매수와 매도 수수료 돌려받기", logo: "b", anim: "4s" },
-                        mini: { main: "환급액 1분 확인", sub: "Check My Payback", btn: "시작", hide: false },
-                        exchanges: [
-                            { name: "Bitget", rate: 81, logo: "https://cdn.worldvectorlogo.com/logos/bitget-logo.svg", link: "#", color: "from-[#00f0ff]/20" }
-                        ]
-                    };
-                    populateForm(currentData);
-                }
-            }, (error) => {
-                console.error("Firestore Error:", error);
-                updateStatusBadge('error');
-            });
+        function syncUI(data) {
+            document.getElementById('topText').value = data.topText || "";
+            document.getElementById('topHide').checked = data.topHide || false;
+            renderExchanges(data.exchanges || []);
         }
 
-        function populateForm(data) {
-            // Mapping Firestore data to DOM
-            document.getElementById('top-text').value = data.top?.text || "";
-            document.getElementById('top-exchange').value = data.top?.exchange || "";
-            document.getElementById('top-action').value = data.top?.action || "";
-            document.getElementById('top-hide').checked = data.top?.hide || false;
-
-            document.getElementById('banner-title').value = data.banner?.title || "";
-            document.getElementById('banner-badge').value = data.banner?.badge || "";
-            document.getElementById('banner-bg').value = data.banner?.bg || "#67e8f9";
-
-            document.getElementById('card-title').value = data.card?.title || "";
-            document.getElementById('card-desc').value = data.card?.desc || "";
-            document.getElementById('card-logo').value = data.card?.logo || "";
-
-            document.getElementById('mini-main').value = data.mini?.main || "";
-            document.getElementById('mini-sub').value = data.mini?.sub || "";
-            document.getElementById('mini-hide').checked = data.mini?.hide || false;
-
-            renderExchangeItems(data.exchanges || []);
-        }
-
-        function renderExchangeItems(list) {
+        function renderExchanges(list) {
             const container = document.getElementById('exchange-list');
+            if (!list || list.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-600 py-10 text-xs italic bg-slate-800/20 rounded-xl border border-dashed border-white/5">등록된 거래소가 없습니다. 우측 상단 '거래소 추가'를 클릭하세요.</div>`;
+                return;
+            }
             container.innerHTML = list.map((ex, i) => `
-                <div class="flex flex-col md:flex-row items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 group">
-                    <div class="w-12 h-12 bg-white/10 rounded-xl p-2 flex items-center justify-center shrink-0">
-                        <img src="${ex.logo}" class="max-h-full object-contain" onerror="this.src='https://via.placeholder.com/40'">
+                <div class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-xl border border-white/5 group transition-all hover:bg-slate-800">
+                    <div class="flex-1 grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <span class="text-[9px] text-indigo-400 font-black uppercase ml-1">거래소 명칭</span>
+                            <input type="text" value="${ex.name || ''}" oninput="updateEx(${i}, 'name', this.value)" class="input-field text-xs py-2" placeholder="예: Binance">
+                        </div>
+                        <div class="space-y-1">
+                            <span class="text-[9px] text-indigo-400 font-black uppercase ml-1">페이백 요율 (%)</span>
+                            <input type="number" value="${ex.rate || 0}" oninput="updateEx(${i}, 'rate', this.value)" class="input-field text-xs py-2" placeholder="0">
+                        </div>
                     </div>
-                    <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
-                        <input type="text" value="${ex.name}" onchange="updateEx(${i}, 'name', this.value)" class="input-field text-xs" placeholder="거래소명">
-                        <input type="number" value="${ex.rate}" onchange="updateEx(${i}, 'rate', this.value)" class="input-field text-xs" placeholder="요율">
-                        <input type="text" value="${ex.logo}" onchange="updateEx(${i}, 'logo', this.value)" class="input-field text-[9px] opacity-40 col-span-1 md:col-span-2" placeholder="로고 URL">
-                    </div>
-                    <button onclick="deleteEx(${i})" class="p-2 text-white/20 hover:text-red-500 transition-colors"><i class="fas fa-trash-alt"></i></button>
+                    <button onclick="deleteEx(${i})" class="text-slate-600 hover:text-rose-500 transition-colors p-2 mt-4">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </div>
             `).join('');
         }
 
+        window.addExchange = () => {
+            if (!localData.exchanges) localData.exchanges = [];
+            localData.exchanges.push({ name: '', rate: 0 });
+            renderExchanges(localData.exchanges);
+        };
+
         window.updateEx = (i, k, v) => {
-            if (k === 'rate') v = parseFloat(v);
-            currentData.exchanges[i][k] = v;
+            localData.exchanges[i][k] = k === 'rate' ? parseFloat(v) || 0 : v;
         };
 
         window.deleteEx = (i) => {
-            currentData.exchanges.splice(i, 1);
-            renderExchangeItems(currentData.exchanges);
+            localData.exchanges.splice(i, 1);
+            renderExchanges(localData.exchanges);
         };
 
-        window.addExchange = () => {
-            currentData.exchanges.push({ name: '신규 거래소', rate: 30, logo: '', link: '#', color: 'from-purple-500/20' });
-            renderExchangeItems(currentData.exchanges);
-        };
-
-        // 3. Save Functionality (Rule 3 Guarded)
         window.saveData = async () => {
-            if (!auth.currentUser) return;
-            
-            const btn = document.getElementById('save-btn');
-            btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-circle-notch animate-spin mr-2"></i> 저장 중...`;
-
-            const payload = {
-                top: {
-                    text: document.getElementById('top-text').value,
-                    exchange: document.getElementById('top-exchange').value,
-                    action: document.getElementById('top-action').value,
-                    hide: document.getElementById('top-hide').checked
-                },
-                banner: {
-                    title: document.getElementById('banner-title').value,
-                    badge: document.getElementById('banner-badge').value,
-                    bg: document.getElementById('banner-bg').value,
-                    icon: "fa-bolt",
-                    hide: false
-                },
-                card: {
-                    title: document.getElementById('card-title').value,
-                    desc: document.getElementById('card-desc').value,
-                    logo: document.getElementById('card-logo').value,
-                    anim: "4s"
-                },
-                mini: {
-                    main: document.getElementById('mini-main').value,
-                    sub: document.getElementById('mini-sub').value,
-                    hide: document.getElementById('mini-hide').checked,
-                    btn: "시작"
-                },
-                exchanges: currentData.exchanges,
-                updatedAt: new Date().toISOString()
-            };
+            const saveBtn = document.getElementById('save-btn');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = `<i class="fas fa-spinner animate-spin mr-2"></i> 데이터 업로드 중...`;
 
             try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'main');
+                if (!auth.currentUser) throw new Error("인증되지 않은 사용자입니다.");
+
+                const docRef = getConfigDocRef();
+                const payload = {
+                    topText: document.getElementById('topText').value,
+                    topHide: document.getElementById('topHide').checked,
+                    exchanges: localData.exchanges || [],
+                    lastSync: new Date().toISOString(),
+                    updatedBy: auth.currentUser.uid
+                };
+
                 await setDoc(docRef, payload, { merge: true });
-                showToast();
+                
+                document.getElementById('toast').classList.add('active');
+                setTimeout(() => document.getElementById('toast').classList.remove('active'), 3000);
             } catch (err) {
                 console.error("Save Error:", err);
-                alert("저장 실패: " + err.message);
+                alert("저장 실패: " + (err.code === 'permission-denied' ? "파이어베이스 보안 규칙(Rules)을 확인하세요." : err.message));
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fas fa-cloud-upload-alt mr-2"></i> 홈페이지 반영하기`;
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalText;
             }
         };
 
-        function showToast() {
-            const toast = document.getElementById('toast');
-            toast.classList.add('active');
-            setTimeout(() => toast.classList.remove('active'), 3000);
-        }
+        window.onload = init;
     </script>
 </body>
 </html>

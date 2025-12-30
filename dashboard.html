@@ -2,334 +2,388 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>리나닷컴 관리자 대시보드</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>리나닷컴 어드민 | 실시간 관리 시스템</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=JetBrains_Mono:wght@400;700&display=swap');
-        :root { --bg-deep: #0f0a1e; --brand-primary: #a855f7; --text-main: #f5f3ff; }
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: var(--bg-deep); color: var(--text-main); }
-        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; }
-        .admin-section { background: rgba(168, 85, 247, 0.05); border: 1px dashed rgba(168, 85, 247, 0.3); border-radius: 24px; }
-        .input-dark { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px 14px; color: white; outline: none; width: 100%; transition: all 0.2s; }
-        .input-dark:focus { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
-        .btn-save { background: #a855f7; color: white; font-weight: 700; padding: 12px; border-radius: 12px; transition: all 0.2s; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-save:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4); }
-        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
-        #toast { visibility: hidden; position: fixed; bottom: 30px; right: 30px; background: #10b981; color: white; padding: 16px 24px; border-radius: 12px; font-weight: bold; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-        #toast.show { visibility: visible; animation: fadeInUp 0.5s; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .loader { border: 2px solid rgba(255, 255, 255, 0.1); border-top: 2px solid #fff; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 200; }
-        .modal-content { background: #1a142e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; width: 90%; max-width: 600px; padding: 30px; }
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0f0a1e;
+            color: #f5f3ff;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+        }
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: white;
+            width: 100%;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .input-field:focus {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.05);
+        }
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #a855f7;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-save {
+            background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+            box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+        }
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(168, 85, 247, 0.4);
+        }
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            transform: translateY(150%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+        #toast.active { transform: translateY(0); }
     </style>
 </head>
-<body class="min-h-screen flex">
-    <div id="toast">클라우드 동기화가 완료되었습니다!</div>
+<body class="p-6 md:p-12 min-h-screen">
+    <div id="toast" class="bg-emerald-500 text-white px-6 py-4 rounded-2xl font-bold shadow-2xl flex items-center gap-3">
+        <i class="fas fa-check-circle"></i>
+        <span>성공적으로 저장되었습니다!</span>
+    </div>
 
-    <!-- 이미지 선택 모달 -->
-    <div id="asset-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 class="text-xl font-bold mb-6">거래소 로고 선택</h3>
-            <div class="grid grid-cols-3 gap-4">
-                <div onclick="selectLogo('https://raw.githubusercontent.com/talmobottle1-boop/newtank26/main/assets/images/binance.png')" class="glass-card p-4 cursor-pointer hover:border-purple-500 flex flex-col items-center gap-2">
-                    <img src="https://raw.githubusercontent.com/talmobottle1-boop/newtank26/main/assets/images/binance.png" class="h-8">
-                    <span class="text-[10px] opacity-50">Binance</span>
+    <div class="max-w-5xl mx-auto space-y-10">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-black italic tracking-tighter">LINA <span class="text-purple-500">DASHBOARD</span></h1>
+                <p class="text-white/40 text-sm font-medium mt-1">홈페이지 구성 요소를 실시간으로 제어합니다.</p>
+            </div>
+            <div id="status-badge" class="px-4 py-2 rounded-full bg-white/5 border border-white/10 flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-white/40">연결 확인 중...</span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Site Content -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- 1. Top Notice Section -->
+                <div class="glass-panel p-8">
+                    <h2 class="section-title"><i class="fas fa-bullhorn"></i> 상단 공지 바 설정</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <label class="block">
+                                <span class="text-[10px] font-bold text-white/40 uppercase ml-1">공지 텍스트</span>
+                                <input type="text" id="top-text" class="input-field" placeholder="지금 바이낸스 페이백 원해?">
+                            </label>
+                            <label class="block">
+                                <span class="text-[10px] font-bold text-white/40 uppercase ml-1">버튼 거래소명</span>
+                                <input type="text" id="top-exchange" class="input-field" placeholder="바이낸스">
+                            </label>
+                        </div>
+                        <div class="space-y-4">
+                            <label class="block">
+                                <span class="text-[10px] font-bold text-white/40 uppercase ml-1">버튼 액션 문구</span>
+                                <input type="text" id="top-action" class="input-field" placeholder="지금 연결">
+                            </label>
+                            <div class="pt-6">
+                                <label class="flex items-center gap-3 cursor-pointer group">
+                                    <input type="checkbox" id="top-hide" class="w-5 h-5 rounded bg-white/10 border-white/20 checked:bg-purple-500">
+                                    <span class="text-sm font-bold text-white/60 group-hover:text-white transition-colors">상단 공지 바 숨기기</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div onclick="selectLogo('https://raw.githubusercontent.com/talmobottle1-boop/newtank26/main/assets/images/bitget.png')" class="glass-card p-4 cursor-pointer hover:border-purple-500 flex flex-col items-center gap-2">
-                    <img src="https://raw.githubusercontent.com/talmobottle1-boop/newtank26/main/assets/images/bitget.png" class="h-8">
-                    <span class="text-[10px] opacity-50">Bitget</span>
+
+                <!-- 2. Main Banner Section -->
+                <div class="glass-panel p-8">
+                    <h2 class="section-title"><i class="fas fa-ad"></i> 중간 커스텀 배너 설정</h2>
+                    <div class="grid grid-cols-1 gap-6">
+                        <label class="block">
+                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">배너 제목 (HTML 사용 가능)</span>
+                            <textarea id="banner-title" class="input-field h-24" placeholder="Bitget 수수료 81%<br>역대 최고 페이백"></textarea>
+                        </label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <label class="block">
+                                <span class="text-[10px] font-bold text-white/40 uppercase ml-1">배너 배지</span>
+                                <input type="text" id="banner-badge" class="input-field" placeholder="리나닷컴 한정 이벤트">
+                            </label>
+                            <label class="block">
+                                <span class="text-[10px] font-bold text-white/40 uppercase ml-1">배너 배경색 (Hex)</span>
+                                <input type="color" id="banner-bg" class="w-full h-11 rounded-xl bg-transparent border-none cursor-pointer">
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div onclick="selectLogo('https://cdn.worldvectorlogo.com/logos/bybit-logo.svg')" class="glass-card p-4 cursor-pointer hover:border-purple-500 flex flex-col items-center gap-2">
-                    <img src="https://cdn.worldvectorlogo.com/logos/bybit-logo.svg" class="h-8">
-                    <span class="text-[10px] opacity-50">Bybit</span>
+
+                <!-- 3. Exchange Grid Section -->
+                <div class="glass-panel p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="section-title !mb-0"><i class="fas fa-list"></i> 제휴 거래소 리스트</h2>
+                        <button onclick="addExchange()" class="px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-xl text-[10px] font-black hover:bg-purple-500/20 transition-all text-purple-400">
+                            + 거래소 추가
+                        </button>
+                    </div>
+                    <div id="exchange-list" class="space-y-4">
+                        <!-- Items injected by JS -->
+                    </div>
                 </div>
             </div>
-            <button onclick="document.getElementById('asset-modal').style.display='none'" class="mt-8 w-full py-2 text-white/40 hover:text-white transition-colors">닫기</button>
+
+            <!-- Right Column: Card & Mini Popup -->
+            <div class="space-y-8">
+                <!-- 4. Floating Card Section -->
+                <div class="glass-panel p-8">
+                    <h2 class="section-title"><i class="fas fa-layer-group"></i> 플로팅 카드 (메인 우측)</h2>
+                    <div class="space-y-4">
+                        <label class="block">
+                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">메인 제목</span>
+                            <input type="text" id="card-title" class="input-field">
+                        </label>
+                        <label class="block">
+                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">설명 문구</span>
+                            <input type="text" id="card-desc" class="input-field">
+                        </label>
+                        <label class="block">
+                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">중앙 로고 이니셜</span>
+                            <input type="text" id="card-logo" class="input-field" maxlength="1">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 5. Mini Bottom Popup -->
+                <div class="glass-panel p-8">
+                    <h2 class="section-title"><i class="fas fa-comment-alt"></i> 하단 환급 팝업</h2>
+                    <div class="space-y-4">
+                        <label class="block">
+                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">메인 문구</span>
+                            <input type="text" id="mini-main" class="input-field">
+                        </label>
+                        <label class="block">
+                            <span class="text-[10px] font-bold text-white/40 uppercase ml-1">서브 문구</span>
+                            <input type="text" id="mini-sub" class="input-field">
+                        </label>
+                        <div class="pt-4">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" id="mini-hide" class="w-5 h-5 rounded bg-white/10 border-white/20 checked:bg-purple-500">
+                                <span class="text-sm font-bold text-white/60 group-hover:text-white transition-colors">팝업 숨기기</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button Container -->
+                <div class="sticky bottom-6 pt-4">
+                    <button id="save-btn" onclick="saveData()" class="btn-save w-full py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all active:scale-95 disabled:opacity-50" disabled>
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span>홈페이지 반영하기</span>
+                    </button>
+                    <p class="text-[10px] text-center text-white/20 mt-4 font-bold uppercase tracking-widest">Changes reflect instantly on main site</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 사이드바 -->
-    <aside class="w-64 border-r border-white/5 p-6 hidden lg:block">
-        <div class="text-xl font-bold mb-10 text-white">LINA<span class="text-purple-500">ADMIN</span></div>
-        <nav class="space-y-2">
-            <div class="p-3 bg-purple-500/10 text-purple-400 rounded-xl flex items-center gap-3">
-                <i class="fas fa-sync-alt"></i> 실시간 클라우드 연동 중
-            </div>
-        </nav>
-    </aside>
-
-    <!-- 메인 콘텐츠 -->
-    <main class="flex-1 p-6 lg:p-10 max-w-5xl mx-auto w-full space-y-10">
-        <header class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-white">통합 제어 센터</h1>
-            <span id="auth-status" class="text-[11px] font-bold opacity-60 uppercase tracking-widest px-4 py-1.5 bg-white/5 rounded-full border border-white/10">연결 시도 중...</span>
-        </header>
-
-        <!-- 알림/오류 메시지 표시 영역 -->
-        <div id="error-alert" class="hidden p-5 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 text-sm">
-            <div class="flex gap-3">
-                <i class="fas fa-exclamation-circle text-xl"></i>
-                <div>
-                    <p class="font-bold mb-2">중요: Firebase 설정 확인 필요</p>
-                    <p id="error-message" class="opacity-80 leading-relaxed"></p>
-                    <div class="mt-4 p-3 bg-black/40 rounded-lg font-mono text-[10px] text-white/60">
-                        1. Firebase Console > Firestore > Rules 확인<br>
-                        2. allow read, write: if request.auth != null; 인지 확인<br>
-                        3. 익명 인증이 Enable 상태인지 재확인
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 상단 배너 설정 -->
-        <section class="admin-section p-8 space-y-6">
-            <div class="flex items-center justify-between">
-                <h2 class="font-bold flex items-center gap-2 text-purple-400"><i class="fas fa-desktop"></i> 홈 화면 공지 및 배너 설정</h2>
-                <div class="flex items-center gap-2 bg-black/20 px-3 py-1 rounded-full border border-white/5">
-                    <input type="checkbox" id="top-popup-hide" class="w-4 h-4 accent-purple-500 cursor-pointer">
-                    <label for="top-popup-hide" class="text-xs text-red-400 font-bold cursor-pointer">상단 배너 숨기기</label>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs opacity-50 mb-1.5 block">히어로 메인 제목 (홈페이지 중앙)</label>
-                        <input type="text" id="notice-title" class="input-dark" placeholder="예: 코인 투자자들의 필수 페이백 서비스">
-                    </div>
-                    <div>
-                        <label class="text-xs opacity-50 mb-1.5 block">게시판 제목 (페이지 상단)</label>
-                        <input type="text" id="board-title" class="input-dark border-purple-500/30" placeholder="예: 실시간 페이백 현황">
-                    </div>
-                    <div>
-                        <label class="text-xs opacity-50 mb-1.5 block">상단 팝업 공지 문구</label>
-                        <input type="text" id="top-popup-text" class="input-dark" placeholder="예: 지금 바이낸스 페이백 원해?">
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="text-xs opacity-50 mb-1.5 block">팝업 타겟 거래소</label>
-                            <input type="text" id="top-popup-exchange" class="input-dark" placeholder="예: 바이낸스">
-                        </div>
-                        <div>
-                            <label class="text-xs opacity-50 mb-1.5 block">버튼 액션 텍스트</label>
-                            <input type="text" id="top-popup-action" class="input-dark" placeholder="예: 지금 연결">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-xs opacity-50 mb-1.5 block">지원 거래소 리스트 (쉼표로 구분)</label>
-                        <input type="text" id="calc-exchanges" class="input-dark text-xs" placeholder="Binance, Bitget, Bybit, OKX, Deepcoin, Mexc">
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 제휴 거래소 관리 -->
-        <section class="glass-card p-8 space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="font-bold text-white"><i class="fas fa-handshake mr-2 text-purple-500"></i>제휴 거래소 리스트 관리</h2>
-                <button onclick="addExchangeRow()" class="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 px-4 py-2 rounded-xl hover:bg-purple-500/40 transition-all font-bold">
-                    <i class="fas fa-plus mr-1"></i> 새 거래소 추가
-                </button>
-            </div>
-            <div id="exchange-list" class="space-y-4">
-                <!-- 거래소 항목들이 동적으로 렌더링됩니다 -->
-            </div>
-        </section>
-
-        <!-- 하단 고정 저장 버튼 -->
-        <div class="sticky bottom-10 z-50">
-            <button id="save-btn" onclick="saveToFirebase()" class="btn-save w-full py-5 text-lg shadow-2xl border border-white/10" disabled>
-                <span id="save-loader" class="loader"></span>
-                <i class="fas fa-cloud-upload-alt mr-2"></i>
-                <span id="save-text">클라우드 저장 및 실시간 반영</span>
-            </button>
-            <p class="text-[10px] text-center mt-3 opacity-30 italic">저장 버튼을 누르는 즉시 모든 사용자에게 실시간으로 업데이트됩니다.</p>
-        </div>
-    </main>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCesFHOKNxwtQq2h6urB_iZ_RWsJz6QuOg",
-            authDomain: "linapay-web.firebaseapp.com",
-            projectId: "linapay-web",
-            storageBucket: "linapay-web.firebasestorage.app",
-            messagingSenderId: "161032590246",
-            appId: "1:161032590246:web:5353957eedeba1d9b37567",
-            measurementId: "G-FGY8MH5WRY"
-        };
-
+        // Firebase Configuration (Injecting environment variables)
+        const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        const appId = 'linapay-web'; 
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'lina-payback-system';
 
-        let localConfig = { home: {}, exchanges: [] };
-        let currentEditingIndex = -1;
+        let currentData = null;
         let unsubscribe = null;
 
+        // 1. Authentication Layer (Rule 3)
         const initAuth = async () => {
-            const statusEl = document.getElementById('auth-status');
-            const errorAlert = document.getElementById('error-alert');
-            const errorMessage = document.getElementById('error-message');
-
             try {
-                statusEl.innerText = "서버 인증 시도 중...";
-                await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Firebase Auth Error:", error);
-                statusEl.innerText = "연결 오류";
-                statusEl.classList.add('text-red-500');
-                errorAlert.classList.remove('hidden');
-                errorMessage.innerText = `익명 로그인이 비활성화되어 있거나 차단되었습니다: ${error.message}`;
-            }
-        };
-
-        onAuthStateChanged(auth, (user) => {
-            const statusEl = document.getElementById('auth-status');
-            const saveBtn = document.getElementById('save-btn');
-
-            if (user) {
-                console.log("Authenticated as:", user.uid);
-                statusEl.innerText = "실시간 서버 연결됨";
-                statusEl.classList.remove('text-red-500');
-                statusEl.classList.add('text-green-400');
-                saveBtn.disabled = false;
-                startSync();
-            } else {
-                saveBtn.disabled = true;
-                statusEl.innerText = "인증 대기 중...";
-            }
-        });
-
-        function startSync() {
-            // 경로 재확인: artifacts -> linapay-web -> public -> data -> configs -> global
-            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'global');
-            
-            unsubscribe = onSnapshot(docRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    localConfig = snapshot.data();
-                    console.log("Firestore Data Loaded:", localConfig);
-                    updateUI();
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
-                    console.log("No existing data found in Firestore. Ready for initial save.");
+                    await signInAnonymously(auth);
                 }
-            }, (error) => {
-                console.error("Firestore sync failed (check rules):", error);
-                if(error.code === 'permission-denied') {
-                    document.getElementById('error-alert').classList.remove('hidden');
-                    document.getElementById('error-message').innerText = "Firestore 보안 규칙에 의해 데이터 접근이 거부되었습니다. 규칙 탭에서 write 권한을 허용했는지 확인하세요.";
-                }
-            });
-        }
-
-        function updateUI() {
-            const h = localConfig.home || {};
-            document.getElementById('notice-title').value = h.noticeTitle || "";
-            document.getElementById('board-title').value = h.boardTitle || "";
-            document.getElementById('top-popup-text').value = h.topText || "";
-            document.getElementById('top-popup-exchange').value = h.topExchange || "";
-            document.getElementById('top-popup-action').value = h.topAction || "";
-            document.getElementById('top-popup-hide').checked = !!h.topHide;
-            document.getElementById('calc-exchanges').value = h.calcExchanges || "";
-            renderList();
-        }
-
-        window.renderList = () => {
-            const container = document.getElementById('exchange-list');
-            if (!container) return;
-            container.innerHTML = '';
-            
-            if (!localConfig.exchanges || localConfig.exchanges.length === 0) {
-                container.innerHTML = '<div class="py-10 text-center opacity-30 text-sm">등록된 거래소가 없습니다. 새 거래소를 추가해주세요.</div>';
-                return;
-            }
-
-            localConfig.exchanges.forEach((ex, i) => {
-                const div = document.createElement('div');
-                div.className = "p-5 glass-card border border-white/5 flex flex-col md:flex-row gap-5 items-center justify-between hover:bg-white/[0.05] transition-colors";
-                div.innerHTML = `
-                    <div class="flex items-center gap-5 w-full md:w-auto">
-                        <img src="${ex.logo || 'https://via.placeholder.com/50'}" class="w-12 h-12 object-contain cursor-pointer border border-white/10 rounded-xl p-2 bg-black/20" onclick="window.openAssetModal(${i})">
-                        <div class="flex-1">
-                            <label class="text-[10px] opacity-30 mb-1 block">거래소 이름</label>
-                            <input type="text" class="bg-transparent font-bold text-lg outline-none border-b border-transparent focus:border-purple-500 w-full" value="${ex.name || ''}" onchange="window.updateExField(${i}, 'name', this.value)">
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-4 w-full md:w-auto items-end">
-                        <div class="flex-1 min-w-[150px]">
-                            <label class="text-[10px] opacity-30 mb-1 block">가입 링크</label>
-                            <input type="text" class="input-dark text-xs py-2" value="${ex.link || ''}" onchange="window.updateExField(${i}, 'link', this.value)">
-                        </div>
-                        <div class="w-20">
-                            <label class="text-[10px] opacity-30 mb-1 block">요율(%)</label>
-                            <input type="number" class="input-dark text-xs py-2 text-center" value="${ex.rate || 0}" onchange="window.updateExField(${i}, 'rate', this.value)">
-                        </div>
-                        <button onclick="window.deleteExchange(${i})" class="text-white/20 hover:text-red-500 p-2 transition-colors"><i class="fas fa-trash-alt"></i></button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        };
-
-        window.updateExField = (i, k, v) => { if (localConfig.exchanges[i]) localConfig.exchanges[i][k] = v; };
-        window.deleteExchange = (i) => { if(confirm('삭제하시겠습니까?')) { localConfig.exchanges.splice(i, 1); renderList(); } };
-        window.addExchangeRow = () => { if (!localConfig.exchanges) localConfig.exchanges = []; localConfig.exchanges.push({ id: Date.now(), name: '새 거래소', logo: 'https://via.placeholder.com/50', link: '', rate: 30 }); renderList(); };
-        window.openAssetModal = (i) => { currentEditingIndex = i; document.getElementById('asset-modal').style.display='flex'; };
-        window.selectLogo = (url) => { if(currentEditingIndex > -1 && localConfig.exchanges[currentEditingIndex]) { localConfig.exchanges[currentEditingIndex].logo = url; renderList(); } document.getElementById('asset-modal').style.display='none'; currentEditingIndex = -1; };
-
-        window.saveToFirebase = async () => {
-            if (!auth.currentUser) return;
-            const btn = document.getElementById('save-btn');
-            const loader = document.getElementById('save-loader');
-            const saveText = document.getElementById('save-text');
-
-            btn.disabled = true;
-            loader.style.display = 'inline-block';
-            saveText.innerText = "클라우드 저장 중...";
-
-            const homeData = {
-                noticeTitle: document.getElementById('notice-title').value,
-                boardTitle: document.getElementById('board-title').value,
-                topText: document.getElementById('top-popup-text').value,
-                topExchange: document.getElementById('top-popup-exchange').value,
-                topAction: document.getElementById('top-popup-action').value,
-                topHide: document.getElementById('top-popup-hide').checked,
-                calcExchanges: document.getElementById('calc-exchanges').value
-            };
-
-            try {
-                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'global');
-                await setDoc(docRef, { 
-                    ...localConfig, 
-                    home: homeData, 
-                    lastModified: new Date().toISOString() 
-                }, { merge: true });
-                
-                console.log("Save Success!");
-                const toast = document.getElementById('toast');
-                toast.className = 'show';
-                setTimeout(() => toast.className = '', 3000);
             } catch (err) {
-                console.error("Save Error Details:", err);
-                alert("저장 실패 (보안 규칙 확인 필요): " + err.message);
-            } finally {
-                btn.disabled = false;
-                loader.style.display = 'none';
-                saveText.innerText = "클라우드 저장 및 실시간 반영";
+                console.error("Auth Error:", err);
             }
         };
 
         initAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            const badge = document.getElementById('status-badge');
+            const saveBtn = document.getElementById('save-btn');
+
+            if (user) {
+                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-500"></div><span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">시스템 연결됨</span>`;
+                saveBtn.disabled = false;
+                startDataSync(user);
+            } else {
+                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px] font-black uppercase tracking-widest text-red-400">인증 필요</span>`;
+                saveBtn.disabled = true;
+            }
+        });
+
+        // 2. Data Synchronization (Rule 1 & 3)
+        function startDataSync(user) {
+            if (!user) return;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'main');
+            
+            unsubscribe = onSnapshot(docRef, (snap) => {
+                if (snap.exists()) {
+                    currentData = snap.data();
+                    populateForm(currentData);
+                } else {
+                    console.log("No remote config found, initializing with defaults.");
+                    currentData = {
+                        top: { text: "지금 바이낸스 페이백 원해?", exchange: "바이낸스", action: "지금 연결", hide: false },
+                        banner: { title: "Bitget 수수료 81%<br>역대 최고 페이백", badge: "리나닷컴 한정 이벤트", bg: "#67e8f9", icon: "fa-bolt", hide: false },
+                        card: { title: "리나닷컴 필수 페이백", desc: "매수와 매도 수수료 돌려받기", logo: "b", anim: "4s" },
+                        mini: { main: "환급액 1분 확인", sub: "Check My Payback", btn: "시작", hide: false },
+                        exchanges: [
+                            { name: "Bitget", rate: 81, logo: "https://cdn.worldvectorlogo.com/logos/bitget-logo.svg", link: "#", color: "from-[#00f0ff]/20" }
+                        ]
+                    };
+                    populateForm(currentData);
+                }
+            }, (error) => {
+                console.error("Firestore Error:", error);
+            });
+        }
+
+        function populateForm(data) {
+            // Mapping Firestore data to DOM
+            document.getElementById('top-text').value = data.top?.text || "";
+            document.getElementById('top-exchange').value = data.top?.exchange || "";
+            document.getElementById('top-action').value = data.top?.action || "";
+            document.getElementById('top-hide').checked = data.top?.hide || false;
+
+            document.getElementById('banner-title').value = data.banner?.title || "";
+            document.getElementById('banner-badge').value = data.banner?.badge || "";
+            document.getElementById('banner-bg').value = data.banner?.bg || "#67e8f9";
+
+            document.getElementById('card-title').value = data.card?.title || "";
+            document.getElementById('card-desc').value = data.card?.desc || "";
+            document.getElementById('card-logo').value = data.card?.logo || "";
+
+            document.getElementById('mini-main').value = data.mini?.main || "";
+            document.getElementById('mini-sub').value = data.mini?.sub || "";
+            document.getElementById('mini-hide').checked = data.mini?.hide || false;
+
+            renderExchangeItems(data.exchanges || []);
+        }
+
+        function renderExchangeItems(list) {
+            const container = document.getElementById('exchange-list');
+            container.innerHTML = list.map((ex, i) => `
+                <div class="flex flex-col md:flex-row items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 group">
+                    <div class="w-12 h-12 bg-white/10 rounded-xl p-2 flex items-center justify-center shrink-0">
+                        <img src="${ex.logo}" class="max-h-full object-contain" onerror="this.src='https://via.placeholder.com/40'">
+                    </div>
+                    <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3 w-full">
+                        <input type="text" value="${ex.name}" onchange="updateEx(${i}, 'name', this.value)" class="input-field text-xs" placeholder="거래소명">
+                        <input type="number" value="${ex.rate}" onchange="updateEx(${i}, 'rate', this.value)" class="input-field text-xs" placeholder="요율">
+                        <input type="text" value="${ex.logo}" onchange="updateEx(${i}, 'logo', this.value)" class="input-field text-[9px] opacity-40 col-span-1 md:col-span-2" placeholder="로고 URL">
+                    </div>
+                    <button onclick="deleteEx(${i})" class="p-2 text-white/20 hover:text-red-500 transition-colors"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `).join('');
+        }
+
+        window.updateEx = (i, k, v) => {
+            if (k === 'rate') v = parseFloat(v);
+            currentData.exchanges[i][k] = v;
+        };
+
+        window.deleteEx = (i) => {
+            currentData.exchanges.splice(i, 1);
+            renderExchangeItems(currentData.exchanges);
+        };
+
+        window.addExchange = () => {
+            currentData.exchanges.push({ name: '신규 거래소', rate: 30, logo: '', link: '#', color: 'from-purple-500/20' });
+            renderExchangeItems(currentData.exchanges);
+        };
+
+        // 3. Save Functionality (Rule 3 Guarded)
+        window.saveData = async () => {
+            if (!auth.currentUser) return;
+            
+            const btn = document.getElementById('save-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-circle-notch animate-spin mr-2"></i> 저장 중...`;
+
+            const payload = {
+                top: {
+                    text: document.getElementById('top-text').value,
+                    exchange: document.getElementById('top-exchange').value,
+                    action: document.getElementById('top-action').value,
+                    hide: document.getElementById('top-hide').checked
+                },
+                banner: {
+                    title: document.getElementById('banner-title').value,
+                    badge: document.getElementById('banner-badge').value,
+                    bg: document.getElementById('banner-bg').value,
+                    icon: "fa-bolt",
+                    hide: false
+                },
+                card: {
+                    title: document.getElementById('card-title').value,
+                    desc: document.getElementById('card-desc').value,
+                    logo: document.getElementById('card-logo').value,
+                    anim: "4s"
+                },
+                mini: {
+                    main: document.getElementById('mini-main').value,
+                    sub: document.getElementById('mini-sub').value,
+                    hide: document.getElementById('mini-hide').checked,
+                    btn: "시작"
+                },
+                exchanges: currentData.exchanges,
+                updatedAt: new Date().toISOString()
+            };
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'main');
+                await setDoc(docRef, payload, { merge: true });
+                showToast();
+            } catch (err) {
+                console.error("Save Error:", err);
+                alert("저장 실패: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-cloud-upload-alt mr-2"></i> 홈페이지 반영하기`;
+            }
+        };
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('active');
+            setTimeout(() => toast.classList.remove('active'), 3000);
+        }
     </script>
 </body>
 </html>

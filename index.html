@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>리나닷컴|페이백</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains_Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg-deep: #0f0a1e;
+            --brand-primary: #a855f7;
+            --brand-secondary: #00f0ff;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-deep);
+            color: #f5f3ff;
+            overflow-x: hidden;
+            word-break: keep-all;
+        }
+
+        .bg-mesh {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: 
+                radial-gradient(circle at 10% 10%, rgba(168, 85, 247, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 90% 90%, rgba(0, 240, 255, 0.1) 0%, transparent 45%);
+            z-index: -1;
+        }
+
+        .glass-header {
+            background: rgba(15, 10, 30, 0.7);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .hero-title {
+            font-weight: 900;
+            line-height: 1.2;
+            letter-spacing: -0.05em;
+        }
+
+        .stat-font { font-family: 'JetBrains_Mono', monospace; }
+
+        .exchange-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .exchange-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .floating-card {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .hidden-element { display: none !important; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 640px) {
+            .hero-title { font-size: 2.25rem; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="bg-mesh"></div>
+
+    <!-- Top Notice Popup (Controlled by Dashboard) -->
+    <div id="top-notice-container" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 py-2.5 px-4 sticky top-0 z-[60] text-center">
+        <div class="max-w-7xl mx-auto flex items-center justify-center space-x-3">
+            <span class="text-[10px] font-black bg-white/20 px-1.5 py-0.5 rounded uppercase tracking-tighter">Event</span>
+            <p id="top-notice-text" class="text-xs sm:text-sm font-bold text-white tracking-tight">지금 바이낸스 페이백 원해?</p>
+            <a id="top-notice-link" href="#" class="bg-white text-purple-600 text-[10px] sm:text-xs font-black px-3 py-1 rounded-full shadow-lg hover:scale-105 transition-transform">
+                <span id="top-notice-exchange">바이낸스</span> <span id="top-notice-action">지금 연결</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="glass-header h-20 flex items-center px-6 lg:px-12 sticky top-[44px] z-50">
+        <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
+            <div class="flex items-center space-x-2.5">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-purple-800 flex items-center justify-center shadow-lg">
+                    <i class="fas fa-infinity text-white text-sm"></i>
+                </div>
+                <span class="text-xl font-bold italic tracking-tighter">리나<span class="text-purple-500">닷컴</span></span>
+            </div>
+            <!-- 상단 메뉴 3개 숨김 처리 (hidden 클래스 적용) -->
+            <nav class="hidden items-center space-x-8 text-sm font-bold text-white/60">
+                <a href="#" class="hover:text-white transition-colors">홈</a>
+                <a href="#exchanges" class="hover:text-white transition-colors">제휴 거래소</a>
+                <a href="dashboard.html" class="text-purple-400 hover:text-purple-300">관리자 대시보드</a>
+            </nav>
+            <button class="px-5 py-2.5 bg-white/5 border border-white/10 rounded-full text-xs font-black hover:bg-white/10 transition-all">
+                UID 조회하기
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative pt-20 pb-32 px-6 overflow-hidden">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <div class="space-y-8 relative z-10">
+                <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20">
+                    <span class="flex h-2 w-2 rounded-full bg-purple-500 animate-pulse"></span>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-purple-400">Trusted Payback Service</span>
+                </div>
+                <h1 class="hero-title text-5xl md:text-7xl">더 이상<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400">수수료 낭비</span><br>하지 마세요.</h1>
+                <p class="text-lg text-white/50 max-w-md font-medium leading-relaxed">
+                    리나닷컴은 공식 파트너십을 통해 업계 최고 요율의 페이백을 보장합니다. 클릭 한 번으로 숨은 돈을 찾으세요.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                    <button class="px-10 py-5 bg-purple-600 rounded-2xl font-black text-lg shadow-[0_15px_30px_rgba(168,85,247,0.3)] hover:scale-105 active:scale-95 transition-all">
+                        페이백 시작하기
+                    </button>
+                    <div class="flex items-center space-x-4 px-6 py-5 bg-white/5 border border-white/10 rounded-2xl">
+                        <div class="flex -space-x-3">
+                            <div class="w-8 h-8 rounded-full border-2 border-[#0f0a1e] bg-purple-500 flex items-center justify-center text-[10px] font-bold">L</div>
+                            <div class="w-8 h-8 rounded-full border-2 border-[#0f0a1e] bg-cyan-500 flex items-center justify-center text-[10px] font-bold">R</div>
+                            <div class="w-8 h-8 rounded-full border-2 border-[#0f0a1e] bg-indigo-500 flex items-center justify-center text-[10px] font-bold">N</div>
+                        </div>
+                        <span class="text-xs font-bold text-white/60">현재 1,200+명 이용 중</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Visual (Controlled by Dashboard) -->
+            <div class="relative">
+                <div id="main-floating-card" class="floating-card glass-card p-8 rounded-[40px] bg-white/5 border border-white/10 backdrop-blur-xl relative z-20">
+                    <div class="flex justify-between items-start mb-12">
+                        <div>
+                            <h3 id="card-title" class="text-xl font-bold mb-1">리나닷컴 필수 페이백</h3>
+                            <p id="card-desc" class="text-xs text-white/40">매수와 매도 수수료 돌려받기</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                    </div>
+                    <div class="flex justify-center py-10">
+                        <div id="card-logo-container" class="w-24 h-24 rounded-full border-4 border-purple-500/30 flex items-center justify-center animate-[spin_4s_linear_infinite]">
+                            <span id="card-logo-text" class="text-4xl font-black italic">b</span>
+                        </div>
+                    </div>
+                    <div class="mt-12 p-5 bg-white/5 rounded-2xl border border-white/5">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-[10px] font-bold text-white/40 uppercase">Total Payback</span>
+                            <span class="text-xs font-bold text-purple-400">LIVE</span>
+                        </div>
+                        <div class="text-2xl font-bold stat-font tracking-tighter">12,450.50 <span class="text-sm font-normal text-white/30 ml-1">USDT</span></div>
+                    </div>
+                </div>
+                <!-- Decoration -->
+                <div class="absolute -top-10 -right-10 w-64 h-64 bg-purple-600/20 rounded-full blur-[100px] -z-10"></div>
+                <div class="absolute -bottom-10 -left-10 w-64 h-64 bg-cyan-600/10 rounded-full blur-[100px] -z-10"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Custom Banner (Controlled by Dashboard) -->
+    <section id="custom-banner-section" class="max-w-7xl mx-auto px-6 mb-24">
+        <div id="custom-banner-bg" class="w-full p-8 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative" style="background-color: #67e8f9;">
+            <div class="relative z-10">
+                <span id="banner-badge" class="px-3 py-1 bg-black/10 rounded-full text-[10px] font-black uppercase mb-3 inline-block">리나닷컴 한정 이벤트</span>
+                <h2 id="banner-title" class="text-2xl md:text-3xl font-black text-black leading-tight">Bitget 수수료 81%<br>역대 최고 페이백</h2>
+            </div>
+            <div class="flex items-center space-x-4 relative z-10">
+                <button class="px-8 py-4 bg-black text-white rounded-2xl font-bold hover:scale-105 transition-transform">지금 확인</button>
+                <div class="w-16 h-16 bg-white/30 rounded-full flex items-center justify-center text-2xl text-black">
+                    <i id="banner-icon" class="fas fa-bolt"></i>
+                </div>
+            </div>
+            <!-- Decorative Icon -->
+            <i class="fas fa-coins absolute -bottom-10 -right-10 text-[180px] text-black/5 rotate-12"></i>
+        </div>
+    </section>
+
+    <!-- Exchange Grid (Controlled by Dashboard) -->
+    <section id="exchanges" class="max-w-7xl mx-auto px-6 py-20">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+            <div class="space-y-4">
+                <h2 class="text-4xl font-bold tracking-tight">제휴 거래소</h2>
+                <p class="text-white/40 max-w-sm font-medium">리나닷컴이 엄선한 신뢰할 수 있는 글로벌 거래소 리스트입니다.</p>
+            </div>
+            <div class="flex space-x-2">
+                <button class="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all"><i class="fas fa-arrow-left"></i></button>
+                <button class="p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all"><i class="fas fa-arrow-right text-purple-400"></i></button>
+            </div>
+        </div>
+
+        <div id="exchange-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Exchanges will be injected here via JavaScript -->
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 pt-20 pb-10 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-start gap-12 mb-20">
+                <div class="space-y-6">
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-purple-500 flex items-center justify-center"><i class="fas fa-infinity text-white text-xs"></i></div>
+                        <span class="text-lg font-bold italic tracking-tighter">리나<span class="text-purple-500">닷컴</span></span>
+                    </div>
+                    <p class="text-white/30 text-xs max-w-xs leading-relaxed font-medium">리나닷컴은 사용자가 지불한 거래 수수료를 투명하게 돌려드리는 테더 페이백 전문 플랫폼입니다.</p>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-12 sm:gap-24">
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-purple-400">Service</h4>
+                        <ul class="text-xs space-y-3 font-bold text-white/50">
+                            <li><a href="#" class="hover:text-white">이용 안내</a></li>
+                            <li><a href="#" class="hover:text-white">페이백 계산기</a></li>
+                            <li><a href="#" class="hover:text-white">고객센터</a></li>
+                        </ul>
+                    </div>
+                    <div class="space-y-4">
+                        <h4 class="text-xs font-black uppercase tracking-widest text-purple-400">Legal</h4>
+                        <ul class="text-xs space-y-3 font-bold text-white/50">
+                            <li><a href="#" class="hover:text-white">이용약관</a></li>
+                            <li><a href="#" class="hover:text-white">개인정보처리방침</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">
+                <p>© 2025 LinaDotCom. All Rights Reserved.</p>
+                <div class="flex space-x-6">
+                    <a href="#"><i class="fab fa-telegram-plane text-sm"></i></a>
+                    <a href="#"><i class="fab fa-twitter text-sm"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mini Bottom Popup (Controlled by Dashboard) -->
+    <div id="mini-popup" class="fixed bottom-6 right-6 z-[100] group">
+        <div class="bg-white rounded-3xl p-4 pl-6 shadow-2xl flex items-center space-x-6 transform transition-all hover:scale-105 active:scale-95 border-4 border-purple-500/20">
+            <div class="text-left">
+                <p id="mini-sub-text" class="text-[9px] font-black text-purple-500 uppercase tracking-tighter">Check My Payback</p>
+                <p id="mini-main-text" class="text-sm font-black text-gray-900 leading-none mt-0.5">환급액 1분 확인</p>
+            </div>
+            <button id="mini-btn-text" class="bg-gray-900 text-white px-5 py-3 rounded-2xl text-xs font-black shadow-lg">시작</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Data Integration Logic ---
+
+        function initHome() {
+            // 1. Top Notice Sync
+            const homeData = JSON.parse(localStorage.getItem('lina_home_settings'));
+            if (homeData) {
+                const container = document.getElementById('top-notice-container');
+                if (homeData.topHide) {
+                    container.classList.add('hidden-element');
+                } else {
+                    container.classList.remove('hidden-element');
+                    document.getElementById('top-notice-text').innerText = homeData.topText;
+                    document.getElementById('top-notice-exchange').innerText = homeData.topExchange;
+                    document.getElementById('top-notice-action').innerText = homeData.topAction;
+                }
+            }
+
+            // 2. Banner & Floating Card Sync
+            const bannerData = JSON.parse(localStorage.getItem('lina_banner_settings'));
+            if (bannerData) {
+                // Custom Banner
+                const bannerSection = document.getElementById('custom-banner-section');
+                if (bannerData.bannerHide) {
+                    bannerSection.classList.add('hidden-element');
+                } else {
+                    bannerSection.classList.remove('hidden-element');
+                    document.getElementById('banner-title').innerHTML = bannerData.bannerTitle.replace('\n', '<br>');
+                    document.getElementById('banner-badge').innerText = bannerData.bannerBadge;
+                    document.getElementById('custom-banner-bg').style.backgroundColor = bannerData.bannerBg;
+                    document.getElementById('banner-icon').className = `fas ${bannerData.bannerIcon}`;
+                }
+
+                // Floating Card
+                document.getElementById('card-title').innerText = bannerData.cardTitle;
+                document.getElementById('card-desc').innerText = bannerData.cardDesc;
+                document.getElementById('card-logo-text').innerText = bannerData.cardLogo;
+                document.getElementById('card-logo-container').style.animationDuration = bannerData.cardAnim;
+                if(bannerData.cardAnim === 'none') {
+                    document.getElementById('card-logo-container').style.animation = 'none';
+                }
+            }
+
+            // 3. Mini Popup Sync
+            const miniData = JSON.parse(localStorage.getItem('lina_mini_settings'));
+            if (miniData) {
+                const mini = document.getElementById('mini-popup');
+                if (miniData.miniHide) {
+                    mini.classList.add('hidden-element');
+                } else {
+                    mini.classList.remove('hidden-element');
+                    document.getElementById('mini-main-text').innerText = miniData.miniMain;
+                    document.getElementById('mini-sub-text').innerText = miniData.miniSub;
+                    document.getElementById('mini-btn-text').innerText = miniData.miniBtn;
+                }
+            }
+
+            // 4. Exchange Grid Render
+            renderExchanges();
+        }
+
+        function renderExchanges() {
+            const container = document.getElementById('exchange-grid');
+            const savedEx = JSON.parse(localStorage.getItem('lina_exchange_list'));
+            
+            // 기본값 (설정이 없을 경우 대비)
+            const defaultEx = [
+                { id: 1, name: 'Bitget', rate: 81, color: 'from-[#00f0ff]/20', logo: 'https://cdn.worldvectorlogo.com/logos/bitget-logo.svg', link: '#' },
+                { id: 2, name: 'Binance', rate: 30, color: 'from-[#f3ba2f]/20', logo: 'https://upload.wikimedia.org/wikipedia/commons/e/e8/Binance_Logo.svg', link: '#' },
+                { id: 3, name: 'Bybit', rate: 25, color: 'from-[#f0b90b]/20', logo: 'https://cdn.worldvectorlogo.com/logos/bybit-logo.svg', link: '#' }
+            ];
+
+            const list = savedEx || defaultEx;
+            container.innerHTML = '';
+
+            list.forEach(ex => {
+                const card = document.createElement('div');
+                card.className = "exchange-card p-8 flex flex-col items-center text-center relative overflow-hidden group";
+                card.innerHTML = `
+                    <div class="absolute inset-0 bg-gradient-to-b ${ex.color} to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="w-20 h-20 bg-white/5 rounded-3xl p-4 mb-8 flex items-center justify-center relative z-10">
+                        <img src="${ex.logo}" onerror="this.src='https://via.placeholder.com/60?text=${ex.name}'" class="max-h-full">
+                    </div>
+                    <h3 class="text-2xl font-black mb-2 relative z-10">${ex.name}</h3>
+                    <div class="flex items-center space-x-2 mb-8 relative z-10">
+                        <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Payback Rate</span>
+                        <span class="text-xl font-black text-purple-400 stat-font">${ex.rate}%</span>
+                    </div>
+                    <a href="${ex.link}" class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-bold hover:bg-white text-gray-400 hover:text-gray-900 transition-all relative z-10">
+                        연결하기
+                    </a>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Initialize on Load
+        window.onload = initHome;
+
+        // Listen for storage changes (다른 탭에서 대시보드 조작 시 실시간 반영)
+        window.addEventListener('storage', (e) => {
+            initHome();
+        });
+    </script>
+</body>
+</html>

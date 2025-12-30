@@ -218,8 +218,26 @@
         let currentData = null;
         let unsubscribe = null;
 
+        // Update Badge UI Helper
+        const updateStatusBadge = (status) => {
+            const badge = document.getElementById('status-badge');
+            const saveBtn = document.getElementById('save-btn');
+            
+            if (status === 'connected') {
+                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-500"></div><span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">시스템 연결됨</span>`;
+                saveBtn.disabled = false;
+            } else if (status === 'error') {
+                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px] font-black uppercase tracking-widest text-red-400">연결 오류</span>`;
+                saveBtn.disabled = true;
+            } else if (status === 'checking') {
+                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div><span class="text-[10px] font-black uppercase tracking-widest text-white/40">연결 확인 중...</span>`;
+                saveBtn.disabled = true;
+            }
+        };
+
         // 1. Authentication Layer (Rule 3)
         const initAuth = async () => {
+            updateStatusBadge('checking');
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
@@ -228,22 +246,18 @@
                 }
             } catch (err) {
                 console.error("Auth Error:", err);
+                updateStatusBadge('error');
             }
         };
 
         initAuth();
 
         onAuthStateChanged(auth, (user) => {
-            const badge = document.getElementById('status-badge');
-            const saveBtn = document.getElementById('save-btn');
-
             if (user) {
-                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-emerald-500"></div><span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">시스템 연결됨</span>`;
-                saveBtn.disabled = false;
+                // 인증 성공 시 데이터 동기화 시작
                 startDataSync(user);
             } else {
-                badge.innerHTML = `<div class="w-2 h-2 rounded-full bg-red-500"></div><span class="text-[10px] font-black uppercase tracking-widest text-red-400">인증 필요</span>`;
-                saveBtn.disabled = true;
+                updateStatusBadge('error');
             }
         });
 
@@ -252,7 +266,11 @@
             if (!user) return;
             const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'configs', 'main');
             
+            // 실시간 리스너 연결
             unsubscribe = onSnapshot(docRef, (snap) => {
+                // 데이터 수신이 시작되면 연결됨 상태로 변경
+                updateStatusBadge('connected');
+                
                 if (snap.exists()) {
                     currentData = snap.data();
                     populateForm(currentData);
@@ -271,6 +289,7 @@
                 }
             }, (error) => {
                 console.error("Firestore Error:", error);
+                updateStatusBadge('error');
             });
         }
 

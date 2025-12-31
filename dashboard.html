@@ -10,11 +10,29 @@
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #050308; color: #f5f3ff; }
         .glass-panel { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; }
-        .input-field { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px 14px; width: 100%; color: white; }
+        .input-field { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px 14px; width: 100%; color: white; font-size: 0.875rem; }
         .sidebar-item.active { background: rgba(168, 85, 247, 0.15); color: #a855f7; border-right: 3px solid #a855f7; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .loading-overlay { position: fixed; inset: 0; background: #050308; display: flex; align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.5s; }
+        
+        /* Custom Upload Button */
+        .upload-btn {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px dashed rgba(168, 85, 247, 0.4);
+            color: #a855f7;
+            transition: all 0.2s;
+        }
+        .upload-btn:hover {
+            background: rgba(168, 85, 247, 0.2);
+            border-style: solid;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
     </style>
 </head>
 <body class="flex flex-col md:flex-row min-h-screen">
@@ -90,17 +108,28 @@
         <!-- Exchanges Tab -->
         <div id="tab-exchanges" class="tab-content space-y-6">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold">Partnerships</h2>
-                <button onclick="addEx()" class="text-xs bg-white/10 px-4 py-2 rounded-lg font-bold border border-white/10">+ ADD</button>
+                <div class="flex items-center space-x-4">
+                    <h2 class="text-xl font-bold">Partnerships</h2>
+                    <span id="ex-count" class="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] font-bold text-white/40">0 TOTAL</span>
+                </div>
+                <button onclick="addEx()" class="text-xs bg-purple-600/20 text-purple-400 px-4 py-2 rounded-lg font-bold border border-purple-600/30 hover:bg-purple-600/30 transition-all">+ NEW EXCHANGE</button>
             </div>
-            <div id="ex-list" class="space-y-4"></div>
-            <button onclick="saveData('lina_exchanges', 'list', { items: exchangeList })" class="w-full py-4 bg-purple-600 rounded-2xl font-black hover:bg-purple-500 transition-all">UPDATE ALL EXCHANGES</button>
+            
+            <div id="ex-list" class="grid grid-cols-1 gap-6">
+                <!-- List dynamically rendered -->
+            </div>
+
+            <div class="pt-6">
+                <button onclick="saveData('lina_exchanges', 'list', { items: exchangeList })" class="w-full py-5 bg-purple-600 rounded-2xl font-black hover:bg-purple-500 transition-all shadow-xl shadow-purple-900/20">
+                    <i class="fas fa-cloud-upload-alt mr-2"></i> UPDATE ALL EXCHANGES (SYNC)
+                </button>
+            </div>
         </div>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -120,7 +149,6 @@
         let user = null;
         window.exchangeList = [];
 
-        // UI Helpers
         window.getValue = (id) => document.getElementById(id).value;
         window.getCheck = (id) => document.getElementById(id).checked;
         window.switchTab = (id, btn) => {
@@ -138,14 +166,10 @@
             setTimeout(() => t.remove(), 3000);
         };
 
-        // RULE 3: Auth First
         async function start() {
             try {
-                // 익명 로그인 시도
-                const cred = await signInAnonymously(auth);
-                console.log("Auth Success:", cred.user.uid);
+                await signInAnonymously(auth);
             } catch (e) {
-                console.error("Auth Error:", e);
                 notify("인증 실패: " + e.code, true);
             }
         }
@@ -164,12 +188,10 @@
             }
         });
 
-        // RULE 1: Strict Paths (6 segments)
         function bindSync() {
             if (!user) return;
             const path = (col, docId) => doc(db, 'artifacts', APP_ID, 'public', 'data', col, docId);
 
-            // Home Listener
             onSnapshot(path('lina_settings', 'home'), (s) => {
                 if (s.exists()) {
                     const d = s.data();
@@ -177,9 +199,8 @@
                     document.getElementById('topExchange').value = d.topExchange || "";
                     document.getElementById('topHide').checked = d.topHide || false;
                 }
-            }, (e) => notify("Home Read Error: " + e.code, true));
+            });
 
-            // Banner Listener
             onSnapshot(path('lina_settings', 'banner'), (s) => {
                 if (s.exists()) {
                     const d = s.data();
@@ -187,38 +208,61 @@
                     document.getElementById('bannerBadge').value = d.bannerBadge || "";
                     document.getElementById('bannerBg').value = d.bannerBg || "#000000";
                 }
-            }, (e) => notify("Banner Read Error: " + e.code, true));
+            });
 
-            // Exchanges Listener
             onSnapshot(path('lina_exchanges', 'list'), (s) => {
                 if (s.exists()) {
                     window.exchangeList = s.data().items || [];
                     renderEx();
                 }
-            }, (e) => notify("Exchanges Read Error: " + e.code, true));
+            });
         }
 
-        // Save Function
         window.saveData = async (col, docId, data) => {
-            if (!user) {
-                notify("인증되지 않음", true);
-                return;
-            }
+            if (!user) { notify("인증되지 않음", true); return; }
             try {
-                // RULE 1: artifacts/{appId}/public/data/{col}/{docId}
                 const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', col, docId);
                 await setDoc(ref, data);
                 notify("Cloud Sync Success!");
             } catch (e) {
-                console.error("Save Error:", e);
-                // 여기서 'Permission Denied'가 발생한다면 Firebase Rules 설정을 바꿔야 합니다.
                 notify("저장 실패: " + e.message, true);
             }
         };
 
-        // Exchange UI Logic
+        // Image Handling
+        window.handleImageUpload = (idx, file) => {
+            if (!file) return;
+            
+            if (file.size > 1024 * 500) { // Limit: 500KB
+                notify("이미지 크기가 너무 큽니다 (최대 500KB)", true);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64 = e.target.result;
+                updateExField(idx, 'logo', base64);
+                // Update specific preview
+                const exId = window.exchangeList[idx].id;
+                const preview = document.getElementById(`preview-${exId}`);
+                if (preview) preview.src = base64;
+                
+                // Update URL input text
+                const urlInput = document.getElementById(`url-input-${exId}`);
+                if (urlInput) urlInput.value = "이미지가 업로드되었습니다 (Base64)";
+            };
+            reader.readAsDataURL(file);
+        };
+
         window.addEx = () => {
-            window.exchangeList.push({ id: Date.now(), name: 'New', rate: 0 });
+            window.exchangeList.unshift({ 
+                id: Date.now(), 
+                name: '', 
+                rate: 50, 
+                logo: '', 
+                color: 'from-purple-500/10', 
+                link: '#' 
+            });
             renderEx();
         };
 
@@ -227,20 +271,66 @@
             renderEx();
         };
 
+        window.updateExField = (idx, field, val) => {
+            window.exchangeList[idx][field] = val;
+            if(field === 'logo') {
+                const exId = window.exchangeList[idx].id;
+                const img = document.getElementById(`preview-${exId}`);
+                if(img) img.src = val || 'https://via.placeholder.com/100?text=No+Image';
+            }
+        };
+
         function renderEx() {
             const container = document.getElementById('ex-list');
+            document.getElementById('ex-count').innerText = `${window.exchangeList.length} TOTAL`;
             container.innerHTML = '';
+            
             window.exchangeList.forEach((ex, i) => {
-                const d = document.createElement('div');
-                d.className = "glass-panel p-4 flex items-center justify-between";
-                d.innerHTML = `
-                    <div class="flex gap-4">
-                        <input type="text" value="${ex.name}" oninput="exchangeList[${i}].name=this.value" class="input-field w-32">
-                        <input type="number" value="${ex.rate}" oninput="exchangeList[${i}].rate=this.value" class="input-field w-20">
+                const card = document.createElement('div');
+                card.className = "glass-panel p-6 flex flex-col md:flex-row gap-8 items-start relative group transition-all hover:border-white/20";
+                card.innerHTML = `
+                    <!-- Logo Preview & Upload Section -->
+                    <div class="w-full md:w-32 flex flex-col gap-3 shrink-0">
+                        <div class="w-32 h-32 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 overflow-hidden shadow-inner">
+                            <img id="preview-${ex.id}" src="${ex.logo || 'https://via.placeholder.com/100?text=No+Image'}" class="max-w-[80%] max-h-[80%] object-contain rounded">
+                        </div>
+                        <label class="upload-btn w-full py-2 rounded-lg text-[10px] font-black uppercase text-center cursor-pointer">
+                            <i class="fas fa-upload mr-1"></i> 파일 선택
+                            <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(${i}, this.files[0])">
+                        </label>
                     </div>
-                    <button onclick="removeEx(${ex.id})" class="text-red-500 p-2"><i class="fas fa-times"></i></button>
+
+                    <!-- Details -->
+                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-bold text-white/30 uppercase">Exchange Name</label>
+                            <input type="text" value="${ex.name}" oninput="updateExField(${i}, 'name', this.value)" class="input-field" placeholder="예: Binance">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-bold text-white/30 uppercase">Payback Rate (%)</label>
+                            <input type="number" value="${ex.rate}" oninput="updateExField(${i}, 'rate', this.value)" class="input-field" placeholder="50">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] font-bold text-white/30 uppercase">Card Color Class (Tailwind)</label>
+                            <input type="text" value="${ex.color}" oninput="updateExField(${i}, 'color', this.value)" class="input-field" placeholder="from-white/10">
+                        </div>
+                        <div class="space-y-1 md:col-span-2 lg:col-span-3">
+                            <label class="text-[9px] font-bold text-white/30 uppercase">Logo Source (URL or Uploaded)</label>
+                            <input type="text" id="url-input-${ex.id}" value="${ex.logo && ex.logo.startsWith('data:') ? '이미지가 업로드되었습니다 (Base64)' : ex.logo}" 
+                                   oninput="updateExField(${i}, 'logo', this.value)" class="input-field" placeholder="https://example.com/logo.png">
+                        </div>
+                        <div class="space-y-1 md:col-span-2 lg:col-span-3">
+                            <label class="text-[9px] font-bold text-white/30 uppercase">Referral Link</label>
+                            <input type="text" value="${ex.link}" oninput="updateExField(${i}, 'link', this.value)" class="input-field" placeholder="https://www.binance.com/join?...">
+                        </div>
+                    </div>
+
+                    <!-- Delete Button -->
+                    <button onclick="removeEx(${ex.id})" class="absolute top-4 right-4 text-white/20 hover:text-red-500 transition-colors p-2">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 `;
-                container.appendChild(d);
+                container.appendChild(card);
             });
         }
 

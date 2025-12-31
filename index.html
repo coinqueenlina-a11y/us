@@ -76,13 +76,58 @@
         ::-webkit-scrollbar-thumb { background: #332a52; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--brand-primary); }
 
+        /* Modal Styles */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            width: 100%;
+            max-width: 480px;
+            background: #1a142e;
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
         @media (max-width: 640px) {
             .hero-title { font-size: 2.5rem; }
         }
 
-        @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        /* Input styling for calculator */
+        .calc-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 12px 16px;
+            width: 100%;
+            color: white;
+            font-weight: bold;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .calc-input:focus {
+            border-color: #a855f7;
         }
     </style>
 </head>
@@ -90,18 +135,18 @@
     <div class="bg-mesh"></div>
 
     <!-- Top Notice Popup -->
-    <div id="top-notice-container" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 py-2.5 px-4 sticky top-0 z-[60] text-center hidden-element">
+    <div id="top-notice-container" class="w-full bg-gradient-to-r from-yellow-500 to-amber-600 py-2.5 px-4 sticky top-0 z-[60] text-center">
         <div class="max-w-7xl mx-auto flex items-center justify-center space-x-3">
-            <span class="text-[10px] font-black bg-white/20 px-1.5 py-0.5 rounded uppercase tracking-tighter">Event</span>
-            <p id="top-notice-text" class="text-xs sm:text-sm font-bold text-white tracking-tight"></p>
-            <a id="top-notice-link" href="#" class="bg-white text-purple-600 text-[10px] sm:text-xs font-black px-3 py-1 rounded-full shadow-lg hover:scale-105 transition-transform">
-                <span id="top-notice-exchange"></span> <span id="top-notice-action"></span>
+            <span class="text-[10px] font-black bg-black/20 px-1.5 py-0.5 rounded uppercase tracking-tighter">Event</span>
+            <p id="top-notice-text" class="text-xs sm:text-sm font-bold text-black tracking-tight">지금 바이낸스 계정을 연결하고 최대 페이백을 확인하세요!</p>
+            <a id="top-notice-link" href="#" class="bg-black text-yellow-400 text-[10px] sm:text-xs font-black px-3 py-1 rounded-full shadow-lg hover:scale-105 transition-transform">
+                <span>Binance</span> <span>연결하기</span>
             </a>
         </div>
     </div>
 
     <!-- Header -->
-    <header class="glass-header h-20 flex items-center px-6 lg:px-12 sticky top-0 z-50">
+    <header class="glass-header h-20 flex items-center px-6 lg:px-12 sticky top-2 z-50 mx-4 rounded-3xl mt-2">
         <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
             <div class="flex items-center space-x-2.5 cursor-pointer" onclick="location.reload()">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-purple-800 flex items-center justify-center shadow-lg">
@@ -110,15 +155,8 @@
                 <span class="text-xl font-bold italic tracking-tighter">리나<span class="text-purple-500">닷컴</span></span>
             </div>
             
-            <!-- 상단 메뉴 숨김 처리 -->
-            <nav class="hidden items-center space-x-8 text-sm font-bold text-white/60">
-                <a href="#exchanges" class="hover:text-white transition-colors">제휴 거래소</a>
-                <a href="#" class="hover:text-white transition-colors">페이백 계산기</a>
-                <a href="#" class="hover:text-white transition-colors">고객센터</a>
-            </nav>
-
-            <button onclick="scrollToExchanges()" class="px-5 py-2.5 bg-white/5 border border-white/10 rounded-full text-xs font-black hover:bg-white/10 transition-all">
-                UID 조회하기
+            <button onclick="openCalculator()" class="px-5 py-2.5 bg-white/5 border border-white/10 rounded-full text-xs font-black hover:bg-white/10 transition-all">
+                페이백 계산하기
             </button>
         </div>
     </header>
@@ -136,72 +174,168 @@
                     리나닷컴은 공식 파트너십을 통해 업계 최고 요율의 페이백을 보장합니다. 클릭 한 번으로 숨은 돈을 찾으세요.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button onclick="scrollToExchanges()" class="px-10 py-5 bg-purple-600 rounded-2xl font-black text-lg shadow-[0_15px_30px_rgba(168,85,247,0.3)] hover:scale-105 active:scale-95 transition-all">
+                    <button onclick="openCalculator()" class="px-10 py-5 bg-purple-600 rounded-2xl font-black text-lg shadow-[0_15px_30px_rgba(168,85,247,0.3)] hover:scale-105 active:scale-95 transition-all">
                         페이백 시작하기
                     </button>
-                    <div class="flex items-center space-x-4 px-6 py-5 bg-white/5 border border-white/10 rounded-2xl">
+                    <button onclick="openLiveStatusModal()" class="flex items-center space-x-4 px-6 py-5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-left">
                         <div class="flex -space-x-3">
                             <div class="w-8 h-8 rounded-full border-2 border-[#0f0a1e] bg-purple-500 flex items-center justify-center text-[10px] font-bold">L</div>
                             <div class="w-8 h-8 rounded-full border-2 border-[#0f0a1e] bg-cyan-500 flex items-center justify-center text-[10px] font-bold">R</div>
                             <div class="w-8 h-8 rounded-full border-2 border-[#0f0a1e] bg-indigo-500 flex items-center justify-center text-[10px] font-bold">N</div>
                         </div>
-                        <span class="text-xs font-bold text-white/60">현재 1,248명 이용 중</span>
-                    </div>
+                        <span class="text-xs font-bold text-white/60">현재 1,248명 이용 중 <i class="fas fa-chevron-right ml-1 text-[8px]"></i></span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Right Visual Card -->
+            <!-- Right Visual Card (비트겟 배너 메인) -->
             <div class="relative">
-                <div id="main-floating-card" class="floating-card glass-card p-8 rounded-[40px] bg-white/5 border border-white/10 backdrop-blur-xl relative z-20">
+                <div id="main-floating-card" class="floating-card glass-card p-8 rounded-[40px] bg-gradient-to-br from-[#1fe2e2]/10 to-transparent border border-[#1fe2e2]/20 backdrop-blur-xl relative z-20 cursor-pointer" onclick="scrollToExchanges()">
                     <div class="flex justify-between items-start mb-12">
                         <div>
-                            <h3 id="card-title" class="text-xl font-bold mb-1">리나닷컴 필수 페이백</h3>
-                            <p id="card-desc" class="text-xs text-white/40">매수와 매도 수수료 돌려받기</p>
+                            <div class="px-2 py-0.5 bg-[#1fe2e2] text-black text-[10px] font-black rounded mb-2 inline-block">HOT EVENT</div>
+                            <h3 id="card-title" class="text-xl font-bold mb-1">Bitget 공식 페이백</h3>
+                            <p id="card-desc" class="text-xs text-white/40">최대 50% 실시간 페이백 제공</p>
                         </div>
-                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg text-white">
-                            <i class="fas fa-shield-alt"></i>
+                        <div class="w-12 h-12 rounded-2xl bg-[#1fe2e2] flex items-center justify-center shadow-lg text-black">
+                            <i class="fas fa-bolt"></i>
                         </div>
                     </div>
                     <div class="flex justify-center py-10">
-                        <div id="card-logo-container" class="w-24 h-24 rounded-full border-4 border-purple-500/30 flex items-center justify-center">
-                            <span id="card-logo-text" class="text-4xl font-black italic text-purple-400">R</span>
+                        <div id="card-logo-container" class="w-24 h-24 rounded-full border-4 border-[#1fe2e2]/30 flex items-center justify-center bg-black/40">
+                             <img src="https://img.bitget.com/static/brand/logo_bitget.png" class="w-12 h-12 object-contain" alt="Bitget">
                         </div>
                     </div>
                     <div class="mt-12 p-5 bg-white/5 rounded-2xl border border-white/5">
                         <div class="flex justify-between items-center mb-3">
                             <span class="text-[10px] font-bold text-white/40 uppercase">Total Payback</span>
-                            <span class="text-xs font-bold text-purple-400">LIVE</span>
+                            <span class="text-xs font-bold text-[#1fe2e2]">LIVE</span>
                         </div>
                         <div id="live-counter" class="text-2xl font-bold stat-font tracking-tighter">
                             245,610.25 <span class="text-sm font-normal text-white/30 ml-1">USDT</span>
                         </div>
                     </div>
                 </div>
-                <div class="absolute -top-10 -right-10 w-64 h-64 bg-purple-600/20 rounded-full blur-[100px] -z-10"></div>
-                <div class="absolute -bottom-10 -left-10 w-64 h-64 bg-cyan-600/10 rounded-full blur-[100px] -z-10"></div>
+                <div class="absolute -top-10 -right-10 w-64 h-64 bg-[#1fe2e2]/20 rounded-full blur-[100px] -z-10"></div>
+                <div class="absolute -bottom-10 -left-10 w-64 h-64 bg-purple-600/10 rounded-full blur-[100px] -z-10"></div>
             </div>
         </div>
     </section>
 
-    <!-- Custom Banner Section -->
-    <section id="custom-banner-section" class="max-w-7xl mx-auto px-6 mb-24 hidden-element">
-        <div id="custom-banner-bg" class="w-full p-8 rounded-[32px] flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
-            <div class="relative z-10">
-                <span id="banner-badge" class="px-3 py-1 bg-black/10 rounded-full text-[10px] font-black uppercase mb-3 inline-block">Event</span>
-                <h2 id="banner-title" class="text-2xl md:text-3xl font-black text-black leading-tight"></h2>
-            </div>
-            <div class="flex items-center space-x-4 relative z-10">
-                <button class="px-8 py-4 bg-black text-white rounded-2xl font-bold hover:scale-105 transition-transform">지금 확인</button>
-                <div class="w-16 h-16 bg-white/30 rounded-full flex items-center justify-center text-2xl text-black">
-                    <i id="banner-icon" class="fas fa-bolt"></i>
+    <!-- Payback Calculator Modal -->
+    <div id="calculator-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="p-8 border-b border-white/5 bg-gradient-to-br from-purple-600/20 to-transparent">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold italic">Lina<span class="text-purple-400">Calculator</span></h3>
+                        <p class="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">월 예상 페이백 계산하기</p>
+                    </div>
+                    <button onclick="closeCalculator()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+                        <i class="fas fa-times text-xs text-white/50"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-5">
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-center px-1">
+                            <label class="text-[11px] font-bold text-white/60 uppercase">시드 자산 (USDT)</label>
+                            <span id="seed-val-display" class="text-xs font-bold text-purple-400 stat-font">5,000</span>
+                        </div>
+                        <input type="number" id="calc-seed" value="5000" class="calc-input" placeholder="0" oninput="calculatePayback()">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-white/60 uppercase px-1">평균 레버리지</label>
+                            <input type="number" id="calc-lev" value="20" class="calc-input" placeholder="10" oninput="calculatePayback()">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[11px] font-bold text-white/60 uppercase px-1">일일 거래 횟수</label>
+                            <input type="number" id="calc-freq" value="5" class="calc-input" placeholder="3" oninput="calculatePayback()">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-bold text-white/60 uppercase px-1">페이백 요율 (%)</label>
+                        <select id="calc-rate" class="calc-input appearance-none" onchange="calculatePayback()">
+                            <option value="54">OKX (54%)</option>
+                            <option value="50" selected>Bitget (50%)</option>
+                            <option value="45">Bybit (45%)</option>
+                            <option value="60">BingX (60%)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
-            <i class="fas fa-coins absolute -bottom-10 -right-10 text-[180px] text-black/5 rotate-12"></i>
+
+            <div class="p-8 space-y-6">
+                <div class="bg-white/5 rounded-2xl p-6 border border-white/5 text-center">
+                    <p class="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-3">Estimated Monthly Payback</p>
+                    <div class="flex items-center justify-center space-x-2">
+                        <span class="text-3xl font-black text-white stat-font" id="result-amount">0.00</span>
+                        <span class="text-lg font-bold text-purple-400">USDT</span>
+                    </div>
+                    <p class="text-[11px] text-white/20 mt-3 font-medium">※ 위 금액은 시장 상황에 따라 변동될 수 있습니다.</p>
+                </div>
+                
+                <button onclick="scrollToExchanges(); closeCalculator();" class="w-full py-4 bg-purple-600 rounded-2xl font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-purple-600/20">
+                    지금 바로 페이백 받기
+                </button>
+            </div>
         </div>
-    </section>
+    </div>
+
+    <!-- Live Status Modal -->
+    <div id="status-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="p-8 border-b border-white/5 bg-gradient-to-br from-purple-600/20 to-transparent">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">실시간 이용 현황</h3>
+                    <button onclick="closeLiveStatusModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <p class="text-[10px] font-bold text-white/40 uppercase mb-1">현재 접속자</p>
+                        <p class="text-2xl font-bold stat-font text-cyan-400">1,248<span class="text-xs ml-1 text-white/20">명</span></p>
+                    </div>
+                    <div class="bg-white/5 p-4 rounded-2xl border border-white/5">
+                        <p class="text-[10px] font-bold text-white/40 uppercase mb-1">누적 가입자</p>
+                        <p class="text-2xl font-bold stat-font text-purple-400">14,209<span class="text-xs ml-1 text-white/20">명</span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 max-h-[300px] overflow-y-auto" id="live-log-container">
+            </div>
+            <div class="p-6 bg-white/5 text-center">
+                <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Real-time Data Synced</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recovery: Bitget Banner before Exchange Grid -->
+    <div class="max-w-7xl mx-auto px-6 mb-12">
+        <div class="w-full bg-gradient-to-r from-[#1fe2e2]/20 to-purple-600/20 border border-[#1fe2e2]/30 rounded-[32px] p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden group hover:border-[#1fe2e2]/50 transition-all">
+            <div class="flex flex-col md:flex-row items-center gap-6 relative z-10 text-center md:text-left">
+                <div class="w-16 h-16 bg-[#1fe2e2] rounded-2xl flex items-center justify-center shadow-lg shadow-[#1fe2e2]/20">
+                    <img src="https://img.bitget.com/static/brand/logo_bitget.png" class="w-10 h-10 object-contain invert" alt="Bitget">
+                </div>
+                <div>
+                    <h4 class="text-2xl font-black tracking-tight mb-1">Bitget 파트너십 기념 단독 이벤트</h4>
+                    <p class="text-sm text-white/60 font-medium">지금 가입 시 평생 수수료 50% 페이백 + 신규 가입 리워드 증정</p>
+                </div>
+            </div>
+            <a href="https://www.bitget.com" target="_blank" class="px-8 py-4 bg-[#1fe2e2] text-black font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl relative z-10">
+                이벤트 참여하기
+            </a>
+            <!-- Decoration -->
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-[#1fe2e2]/10 blur-3xl rounded-full"></div>
+        </div>
+    </div>
 
     <!-- Exchange Grid -->
-    <section id="exchanges" class="max-w-7xl mx-auto px-6 py-20">
+    <section id="exchanges" class="max-w-7xl mx-auto px-6 py-10">
         <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
             <div class="space-y-4">
                 <h2 class="text-4xl font-bold tracking-tight">제휴 거래소</h2>
@@ -210,7 +344,6 @@
         </div>
 
         <div id="exchange-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Loading Indicator -->
             <div class="col-span-full py-20 text-center opacity-20">
                 <i class="fas fa-circle-notch animate-spin text-4xl mb-4"></i>
                 <p class="text-xs font-bold uppercase tracking-widest">데이터를 불러오는 중입니다...</p>
@@ -234,7 +367,7 @@
                         <h4 class="text-xs font-black uppercase tracking-widest text-purple-400">Service</h4>
                         <ul class="text-xs space-y-3 font-bold text-white/50">
                             <li><a href="#" class="hover:text-white">이용 안내</a></li>
-                            <li><a href="#" class="hover:text-white">페이백 계산기</a></li>
+                            <li><button onclick="openCalculator()" class="hover:text-white">페이백 계산기</button></li>
                         </ul>
                     </div>
                     <div class="space-y-4">
@@ -252,24 +385,12 @@
         </div>
     </footer>
 
-    <!-- Mini Bottom Popup -->
-    <div id="mini-popup" class="fixed bottom-6 right-6 z-[100] group hidden-element">
-        <div class="bg-white rounded-3xl p-4 pl-6 shadow-2xl flex items-center space-x-6 transform transition-all hover:scale-105 active:scale-95 border-4 border-purple-500/20 cursor-pointer">
-            <div class="text-left">
-                <p id="mini-sub-text" class="text-[9px] font-black text-purple-500 uppercase tracking-tighter"></p>
-                <p id="mini-main-text" class="text-sm font-black text-gray-900 leading-none mt-0.5"></p>
-            </div>
-            <button id="mini-btn-text" class="bg-gray-900 text-white px-5 py-3 rounded-2xl text-xs font-black shadow-lg"></button>
-        </div>
-    </div>
-
     <!-- Firebase SDK & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Global Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCesFHOKNxwtQq2h6urB_iZ_RWsJz6QuOg",
             authDomain: "linapay-web.firebaseapp.com",
@@ -285,134 +406,54 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Fallback data when Firestore is not ready or data is missing
         const DEFAULT_EXCHANGES = [
-            {
-                name: "OKX",
-                logo: "https://static.okx.com/cdn/assets/imgs/221/96245C0A0271569B.png",
-                rate: 54,
-                color: "from-white/10",
-                link: "https://www.okx.com/join"
-            },
-            {
-                name: "Bitget",
-                logo: "https://img.bitget.com/static/brand/logo_bitget.png",
-                rate: 50,
-                color: "from-cyan-500/10",
-                link: "https://www.bitget.com"
-            }
+            { name: "OKX", logo: "https://static.okx.com/cdn/assets/imgs/221/96245C0A0271569B.png", rate: 54, color: "from-white/10", link: "https://www.okx.com/join" },
+            { name: "Bitget", logo: "https://img.bitget.com/static/brand/logo_bitget.png", rate: 50, color: "from-[#1fe2e2]/10", link: "https://www.bitget.com" },
+            { name: "Bybit", logo: "https://www.bybit.com/favicon.ico", rate: 45, color: "from-yellow-500/10", link: "https://www.bybit.com" }
         ];
 
-        // Ensure Path follows RULE 1
         const getDocPath = (col, docId) => doc(db, 'artifacts', appId, 'public', 'data', col, docId);
 
         let syncStarted = false;
 
         function init() {
-            // Authentication Guard (RULE 3)
             onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    console.log("Firebase Auth Success:", user.uid);
                     if (!syncStarted) {
                         syncStarted = true;
                         setupRealtimeSync();
                     }
                 } else {
-                    console.log("Attempting Anonymous Auth...");
-                    signInAnonymously(auth).catch(err => {
-                        console.error("Critical Auth Error:", err);
-                        // Show default even if auth fails
-                        renderExchanges(DEFAULT_EXCHANGES);
-                    });
+                    signInAnonymously(auth).catch(() => renderExchanges(DEFAULT_EXCHANGES));
                 }
             });
-            
             animateCounter();
+            initLiveStatus();
+            calculatePayback();
         }
 
         async function setupRealtimeSync() {
-            // Wait for a small fraction to ensure auth token is fully propagated in internal headers
-            await new Promise(r => setTimeout(r, 100));
-
-            // Helper to handle snapshot errors
-            const handleSyncError = (col, err) => {
-                console.warn(`Sync Error [${col}]:`, err.message);
-                if (col === 'lina_exchanges') renderExchanges(DEFAULT_EXCHANGES);
-            };
-
-            // 1. Home Settings (Notice Bar)
-            onSnapshot(getDocPath('lina_settings', 'home'), (snap) => {
-                if (snap.exists()) {
-                    const data = snap.data();
-                    const container = document.getElementById('top-notice-container');
-                    if (data && !data.topHide) {
-                        container.classList.remove('hidden-element');
-                        document.getElementById('top-notice-text').innerText = data.topText || "";
-                        document.getElementById('top-notice-exchange').innerText = data.topExchange || "";
-                        document.getElementById('top-notice-action').innerText = data.topAction || "";
-                    } else {
-                        container.classList.add('hidden-element');
-                    }
-                }
-            }, (err) => handleSyncError('lina_settings:home', err));
-
-            // 2. Banner & Main Card
-            onSnapshot(getDocPath('lina_settings', 'banner'), (snap) => {
-                if (snap.exists()) {
-                    const data = snap.data();
-                    const bannerSection = document.getElementById('custom-banner-section');
-                    if (data && !data.bannerHide) {
-                        bannerSection.classList.remove('hidden-element');
-                        document.getElementById('banner-title').innerHTML = (data.bannerTitle || "").replace(/\n/g, '<br>');
-                        document.getElementById('banner-badge').innerText = data.bannerBadge || "EVENT";
-                        document.getElementById('custom-banner-bg').style.backgroundColor = data.bannerBg || "#a855f7";
-                        document.getElementById('banner-icon').className = `fas ${data.bannerIcon || 'fa-bolt'}`;
-                    } else {
-                        bannerSection.classList.add('hidden-element');
-                    }
-
-                    document.getElementById('card-title').innerText = data.cardTitle || "리나닷컴 필수 페이백";
-                    document.getElementById('card-desc').innerText = data.cardDesc || "";
-                    document.getElementById('card-logo-text').innerText = data.cardLogo || "R";
-                    const logoContainer = document.getElementById('card-logo-container');
-                    if (data.cardAnim && data.cardAnim !== 'none') {
-                        logoContainer.style.animation = `spin-slow ${data.cardAnim} linear infinite`;
-                    } else {
-                        logoContainer.style.animation = 'none';
-                    }
-                }
-            }, (err) => handleSyncError('lina_settings:banner', err));
-
-            // 3. Mini Popup
-            onSnapshot(getDocPath('lina_settings', 'mini'), (snap) => {
-                if (snap.exists()) {
-                    const data = snap.data();
-                    const mini = document.getElementById('mini-popup');
-                    if (data && !data.miniHide) {
-                        mini.classList.remove('hidden-element');
-                        document.getElementById('mini-main-text').innerText = data.miniMain || "";
-                        document.getElementById('mini-sub-text').innerText = data.miniSub || "";
-                        document.getElementById('mini-btn-text').innerText = data.miniBtn || "시작";
-                    } else {
-                        mini.classList.add('hidden-element');
-                    }
-                }
-            }, (err) => handleSyncError('lina_settings:mini', err));
-
-            // 4. Exchange List
             onSnapshot(getDocPath('lina_exchanges', 'list'), (snap) => {
-                if (snap.exists() && snap.data().items && snap.data().items.length > 0) {
-                    renderExchanges(snap.data().items);
-                } else {
-                    renderExchanges(DEFAULT_EXCHANGES);
+                if (snap.exists() && snap.data().items && snap.data().items.length > 0) renderExchanges(snap.data().items);
+                else renderExchanges(DEFAULT_EXCHANGES);
+            }, (err) => renderExchanges(DEFAULT_EXCHANGES));
+            
+            onSnapshot(getDocPath('lina_settings', 'home'), (snap) => {
+                if(snap.exists()){
+                    const d = snap.data();
+                    const container = document.getElementById('top-notice-container');
+                    if(d.topHide) container.classList.add('hidden-element');
+                    else {
+                        container.classList.remove('hidden-element');
+                        if(d.topText) document.getElementById('top-notice-text').innerText = d.topText;
+                    }
                 }
-            }, (err) => handleSyncError('lina_exchanges', err));
+            });
         }
 
         function renderExchanges(list) {
             const container = document.getElementById('exchange-grid');
             if (!container) return;
-            
             container.innerHTML = '';
             list.forEach(ex => {
                 const card = document.createElement('div');
@@ -430,10 +471,10 @@
                             <span class="text-lg font-bold text-purple-400/60">%</span>
                         </div>
                     </div>
-                    <a href="${ex.link || '#'}" target="_blank" class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-sm hover:bg-white hover:text-gray-900 transition-all relative z-10 flex items-center justify-center space-x-2">
+                    <button onclick="openCalculator()" class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-sm hover:bg-white hover:text-gray-900 transition-all relative z-10 flex items-center justify-center space-x-2">
                         <span>페이백 시작하기</span>
                         <i class="fas fa-chevron-right text-[10px]"></i>
-                    </a>
+                    </button>
                 `;
                 container.appendChild(card);
             });
@@ -448,9 +489,54 @@
             }, 3000);
         }
 
+        function initLiveStatus() {
+            const logContainer = document.getElementById('live-log-container');
+            if(!logContainer) return;
+            for(let i=0; i<5; i++) addRandomLog(logContainer);
+            setInterval(() => addRandomLog(logContainer), 5000);
+        }
+
+        function addRandomLog(container) {
+            const exchanges = ['OKX', 'Bitget', 'Bybit', 'BingX', 'Gate.io'];
+            const actions = ['페이백 신청 완료', 'UID 연동 성공', '계좌 생성 완료', '수익금 정산 중'];
+            const ex = exchanges[Math.floor(Math.random() * exchanges.length)];
+            const act = actions[Math.floor(Math.random() * actions.length)];
+            const uid = Math.floor(1000 + Math.random() * 9000) + '***';
+            
+            const log = document.createElement('div');
+            log.className = "flex items-center space-x-3 p-3 mb-2 rounded-xl bg-white/5 border border-white/5";
+            log.innerHTML = `
+                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                <div class="flex-1">
+                    <p class="text-[11px] font-bold text-white/80"><span class="text-purple-400">[${ex}]</span> UID ${uid}님</p>
+                    <p class="text-[9px] text-white/30 font-medium">${act}</p>
+                </div>
+                <span class="text-[9px] font-mono text-white/20">방금 전</span>
+            `;
+            container.prepend(log);
+            if(container.children.length > 10) container.lastChild.remove();
+        }
+
+        window.calculatePayback = () => {
+            const seed = parseFloat(document.getElementById('calc-seed').value) || 0;
+            const lev = parseFloat(document.getElementById('calc-lev').value) || 0;
+            const freq = parseFloat(document.getElementById('calc-freq').value) || 0;
+            const rate = parseFloat(document.getElementById('calc-rate').value) || 0;
+            const display = document.getElementById('seed-val-display');
+            if(display) display.innerText = seed.toLocaleString();
+            const feeRate = 0.0004;
+            const monthlyVolume = seed * lev * freq * 30;
+            const estimatedPayback = monthlyVolume * feeRate * (rate / 100);
+            const res = document.getElementById('result-amount');
+            if(res) res.innerText = estimatedPayback.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        };
+
+        window.openCalculator = () => { document.getElementById('calculator-modal').classList.add('active'); calculatePayback(); };
+        window.closeCalculator = () => document.getElementById('calculator-modal').classList.remove('active');
+        window.openLiveStatusModal = () => document.getElementById('status-modal').classList.add('active');
+        window.closeLiveStatusModal = () => document.getElementById('status-modal').classList.remove('active');
         window.scrollToExchanges = () => document.getElementById('exchanges')?.scrollIntoView({ behavior: 'smooth' });
 
-        // Bootstrap
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>

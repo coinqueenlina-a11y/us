@@ -155,8 +155,8 @@
                 <span class="text-lg sm:text-xl font-bold italic tracking-tighter">리나<span class="text-purple-500">닷컴</span></span>
             </div>
             
-            <button onclick="openCalculator()" class="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-[11px] sm:text-xs font-black hover:bg-white/10 transition-all">
-                계산기
+            <button onclick="openCalculator()" class="px-5 py-2.5 bg-white/5 border border-white/10 rounded-full text-[11px] sm:text-xs font-black hover:bg-white/10 transition-all">
+                페이백 계산하기
             </button>
         </div>
     </header>
@@ -257,8 +257,45 @@
         </div>
     </section>
 
+    <!-- Footer Information (추가된 부분) -->
+    <footer class="max-w-7xl mx-auto px-6 py-20 mt-10 border-t border-white/5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div class="space-y-6">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-purple-800 flex items-center justify-center">
+                        <i class="fas fa-infinity text-white text-xs"></i>
+                    </div>
+                    <span class="text-xl font-bold italic tracking-tighter">리나<span class="text-purple-500">닷컴</span></span>
+                </div>
+                <p class="text-sm text-white/40 leading-relaxed max-w-sm">
+                    리나닷컴은 거래소와의 공식 파트너십을 통해 사용자들에게 투명하고 안전한 페이백 서비스를 제공합니다. 모든 데이터는 실시간으로 연동됩니다.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="https://pf.kakao.com/_ExlxxxjG" target="_blank" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-yellow-400 hover:text-black transition-all">
+                        <i class="fas fa-comment"></i>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-purple-500 transition-all">
+                        <i class="fab fa-telegram-plane"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="space-y-6">
+                <h4 class="text-sm font-bold uppercase tracking-widest text-white/60">Risk Warning</h4>
+                <div class="p-5 bg-red-500/5 border border-red-500/10 rounded-2xl">
+                    <p class="text-[12px] text-red-400/80 leading-relaxed">
+                        가상자산 거래는 높은 시장 변동성으로 인해 원금 손실의 위험이 있습니다. 본 서비스는 투자 권유가 아닌 수수료 절감 혜택만을 제공하며, 모든 투자 판단의 책임은 본인에게 있습니다.
+                    </p>
+                </div>
+                <div class="text-[11px] text-white/20 space-y-1">
+                    <p>© 2024 LinaPay. All rights reserved.</p>
+                    <p>Contact: support@linapay.com</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
     <!-- Modals -->
-    <!-- Exchange Detail Modal (가입 링크 포함) -->
+    <!-- Exchange Detail Modal -->
     <div id="exchange-modal" class="modal-overlay" onclick="handleOverlayClick(event, 'exchange-modal')">
         <div class="modal-content">
             <div id="modal-accent-bar" class="h-1.5 w-full bg-purple-600"></div>
@@ -278,7 +315,13 @@
                         리나닷컴 공식 파트너십 계정으로 가입 시, 수수료의 <span id="modal-ex-rate-text" class="text-white font-bold">0%</span>를 평생 페이백 받으실 수 있습니다.
                     </p>
                 </div>
-                <a id="modal-ex-link" href="#" target="_blank" class="block w-full py-4 bg-purple-600 rounded-xl sm:rounded-2xl font-black text-center text-[15px] shadow-xl active:scale-95 transition-transform">계정 만들기 (페이백 적용)</a>
+                
+                <div class="space-y-3">
+                    <a id="modal-ex-link" href="#" target="_blank" class="block w-full py-4 bg-purple-600 rounded-xl sm:rounded-2xl font-black text-center text-[15px] shadow-xl active:scale-95 transition-transform">계정 만들기 (페이백 적용)</a>
+                    <button onclick="closeExchangeModal(); openCalculator();" class="block w-full py-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl font-black text-center text-[15px] hover:bg-white/10 active:scale-95 transition-all text-white/80">
+                        <i class="fas fa-calculator mr-2 text-xs"></i>나의 예상 페이백 계산하기
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -360,7 +403,6 @@
         }
 
         function setupRealtimeSync() {
-            // 1. 공지사항
             onSnapshot(getDocPath('lina_settings', 'home'), (snap) => {
                 const container = document.getElementById('top-notice-container');
                 if (snap.exists()) {
@@ -375,7 +417,6 @@
                 }
             });
 
-            // 2. 상단 핫카드
             onSnapshot(getDocPath('lina_settings', 'hotcard'), (snap) => {
                 if (snap.exists()) {
                     const data = snap.data();
@@ -396,7 +437,6 @@
                 }
             });
 
-            // 3. 중간 배너
             onSnapshot(getDocPath('lina_settings', 'banner'), (snap) => {
                 if (snap.exists()) {
                     const data = snap.data();
@@ -413,7 +453,6 @@
                 }
             });
 
-            // 4. 거래소
             onSnapshot(getDocPath('lina_exchanges', 'list'), (snap) => {
                 if (snap.exists()) {
                     currentExList = snap.data().items || [];
@@ -446,7 +485,6 @@
             });
         }
 
-        // Global functions for interaction
         window.openExchangeModal = (idx) => {
             const ex = currentExList[idx];
             if (!ex) return;
@@ -456,7 +494,7 @@
             document.getElementById('modal-ex-rate-text').innerText = `${ex.rate}%`;
             document.getElementById('modal-ex-link').href = ex.link;
             document.getElementById('exchange-modal').classList.add('active');
-            document.body.style.overflow = 'hidden'; // Scroll lock
+            document.body.style.overflow = 'hidden'; 
         };
 
         window.closeExchangeModal = () => {

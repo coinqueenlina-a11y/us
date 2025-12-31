@@ -78,8 +78,8 @@
 
         /* Modal Styles */
         .modal-overlay {
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s ease;
@@ -96,25 +96,20 @@
             pointer-events: auto;
         }
         .modal-content {
-            transform: scale(0.9);
+            transform: scale(0.95);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             width: 100%;
-            max-width: 480px;
-            background: #1a142e;
-            border-radius: 32px;
+            max-width: 440px;
+            background: #161127;
+            border-radius: 36px;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
             overflow: hidden;
         }
         .modal-overlay.active .modal-content {
             transform: scale(1);
         }
 
-        @media (max-width: 640px) {
-            .hero-title { font-size: 2.5rem; }
-        }
-
-        /* Input styling for calculator */
         .calc-input {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -174,7 +169,7 @@
                     리나닷컴은 공식 파트너십을 통해 업계 최고 요율의 페이백을 보장합니다. 클릭 한 번으로 숨은 돈을 찾으세요.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button onclick="openCalculator()" class="px-10 py-5 bg-purple-600 rounded-2xl font-black text-lg shadow-[0_15px_30px_rgba(168,85,247,0.3)] hover:scale-105 active:scale-95 transition-all">
+                    <button onclick="scrollToExchanges()" class="px-10 py-5 bg-purple-600 rounded-2xl font-black text-lg shadow-[0_15px_30px_rgba(168,85,247,0.3)] hover:scale-105 active:scale-95 transition-all">
                         페이백 시작하기
                     </button>
                     <button onclick="openLiveStatusModal()" class="flex items-center space-x-4 px-6 py-5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all text-left">
@@ -221,6 +216,56 @@
             </div>
         </div>
     </section>
+
+    <!-- Payback Detail Modal (Added for specific exchange intro) -->
+    <div id="exchange-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="modal-accent-bar" class="h-2 w-full bg-purple-600"></div>
+            <div class="p-8">
+                <div class="flex justify-between items-start mb-8">
+                    <div class="w-20 h-20 bg-white rounded-2xl p-4 flex items-center justify-center shadow-2xl">
+                        <img id="modal-ex-logo" src="" class="max-h-full max-w-full object-contain" alt="Exchange Logo">
+                    </div>
+                    <button onclick="closeExchangeModal()" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors">
+                        <i class="fas fa-times text-white/40"></i>
+                    </button>
+                </div>
+                
+                <h3 id="modal-ex-name" class="text-3xl font-black mb-2">Exchange</h3>
+                <div class="flex items-center space-x-2 mb-6">
+                    <span class="px-2 py-0.5 bg-purple-500/20 text-purple-400 text-[10px] font-black rounded uppercase">Official Partner</span>
+                    <span id="modal-ex-rate-badge" class="px-2 py-0.5 bg-green-500/20 text-green-400 text-[10px] font-black rounded uppercase">54% Payback</span>
+                </div>
+
+                <div class="space-y-4 mb-10">
+                    <div class="p-4 bg-white/5 rounded-2xl border border-white/5">
+                        <p class="text-xs text-white/60 leading-relaxed">
+                            리나닷컴을 통해 가입 시, 지불한 거래 수수료의 <span id="modal-ex-rate-text" class="text-white font-bold">0%</span>를 평생 페이백 받으실 수 있습니다. 기존 계정이 있어도 새로운 계정 생성을 통해 혜택 적용이 가능합니다.
+                        </p>
+                    </div>
+                    <ul class="space-y-2">
+                        <li class="flex items-center space-x-2 text-[11px] font-bold text-white/40">
+                            <i class="fas fa-check-circle text-purple-500"></i>
+                            <span>실시간 수수료 정산 및 자동 페이백</span>
+                        </li>
+                        <li class="flex items-center space-x-2 text-[11px] font-bold text-white/40">
+                            <i class="fas fa-check-circle text-purple-500"></i>
+                            <span>UID 연동을 통한 투명한 내역 확인</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3">
+                    <a id="modal-ex-link" href="#" target="_blank" class="w-full py-4 bg-purple-600 rounded-2xl font-black text-center text-sm shadow-xl shadow-purple-900/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                        페이백 계정 만들기 (가입 링크)
+                    </a>
+                    <button onclick="closeExchangeModal(); openCalculator();" class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-xs hover:bg-white/10 transition-all">
+                        나의 예상 수익 계산해보기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Payback Calculator Modal -->
     <div id="calculator-modal" class="modal-overlay">
@@ -275,7 +320,6 @@
                         <span class="text-3xl font-black text-white stat-font" id="result-amount">0.00</span>
                         <span class="text-lg font-bold text-purple-400">USDT</span>
                     </div>
-                    <p class="text-[11px] text-white/20 mt-3 font-medium">※ 위 금액은 시장 상황에 따라 변동될 수 있습니다.</p>
                 </div>
                 
                 <button onclick="scrollToExchanges(); closeCalculator();" class="w-full py-4 bg-purple-600 rounded-2xl font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-purple-600/20">
@@ -308,9 +352,6 @@
             </div>
             <div class="p-4 max-h-[300px] overflow-y-auto" id="live-log-container">
             </div>
-            <div class="p-6 bg-white/5 text-center">
-                <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest">Real-time Data Synced</p>
-            </div>
         </div>
     </div>
 
@@ -329,7 +370,6 @@
             <a href="https://www.bitget.com" target="_blank" class="px-8 py-4 bg-[#1fe2e2] text-black font-black rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-xl relative z-10">
                 이벤트 참여하기
             </a>
-            <!-- Decoration -->
             <div class="absolute -right-10 -top-10 w-40 h-40 bg-[#1fe2e2]/10 blur-3xl rounded-full"></div>
         </div>
     </div>
@@ -370,13 +410,6 @@
                             <li><button onclick="openCalculator()" class="hover:text-white">페이백 계산기</button></li>
                         </ul>
                     </div>
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-black uppercase tracking-widest text-purple-400">Legal</h4>
-                        <ul class="text-xs space-y-3 font-bold text-white/50">
-                            <li><a href="#" class="hover:text-white">이용약관</a></li>
-                            <li><a href="#" class="hover:text-white">개인정보처리방침</a></li>
-                        </ul>
-                    </div>
                 </div>
             </div>
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">
@@ -397,8 +430,7 @@
             projectId: "linapay-web",
             storageBucket: "linapay-web.firebasestorage.app",
             messagingSenderId: "161032590246",
-            appId: "1:161032590246:web:5353957eedeba1d9b37567",
-            measurementId: "G-FGY8MH5WRY"
+            appId: "1:161032590246:web:5353957eedeba1d9b37567"
         };
 
         const appId = "linapay-web-v1";
@@ -407,10 +439,12 @@
         const auth = getAuth(app);
 
         const DEFAULT_EXCHANGES = [
-            { name: "OKX", logo: "https://static.okx.com/cdn/assets/imgs/221/96245C0A0271569B.png", rate: 54, color: "from-white/10", link: "https://www.okx.com/join" },
-            { name: "Bitget", logo: "https://img.bitget.com/static/brand/logo_bitget.png", rate: 50, color: "from-[#1fe2e2]/10", link: "https://www.bitget.com" },
-            { name: "Bybit", logo: "https://www.bybit.com/favicon.ico", rate: 45, color: "from-yellow-500/10", link: "https://www.bybit.com" }
+            { id: 1, name: "OKX", logo: "https://static.okx.com/cdn/assets/imgs/221/96245C0A0271569B.png", rate: 54, color: "from-white/10", link: "https://www.okx.com/join" },
+            { id: 2, name: "Bitget", logo: "https://img.bitget.com/static/brand/logo_bitget.png", rate: 50, color: "from-[#1fe2e2]/10", link: "https://www.bitget.com" },
+            { id: 3, name: "Bybit", logo: "https://www.bybit.com/favicon.ico", rate: 45, color: "from-yellow-500/10", link: "https://www.bybit.com" }
         ];
+
+        let currentExList = DEFAULT_EXCHANGES;
 
         const getDocPath = (col, docId) => doc(db, 'artifacts', appId, 'public', 'data', col, docId);
 
@@ -434,28 +468,19 @@
 
         async function setupRealtimeSync() {
             onSnapshot(getDocPath('lina_exchanges', 'list'), (snap) => {
-                if (snap.exists() && snap.data().items && snap.data().items.length > 0) renderExchanges(snap.data().items);
+                if (snap.exists() && snap.data().items && snap.data().items.length > 0) {
+                    currentExList = snap.data().items;
+                    renderExchanges(currentExList);
+                }
                 else renderExchanges(DEFAULT_EXCHANGES);
             }, (err) => renderExchanges(DEFAULT_EXCHANGES));
-            
-            onSnapshot(getDocPath('lina_settings', 'home'), (snap) => {
-                if(snap.exists()){
-                    const d = snap.data();
-                    const container = document.getElementById('top-notice-container');
-                    if(d.topHide) container.classList.add('hidden-element');
-                    else {
-                        container.classList.remove('hidden-element');
-                        if(d.topText) document.getElementById('top-notice-text').innerText = d.topText;
-                    }
-                }
-            });
         }
 
         function renderExchanges(list) {
             const container = document.getElementById('exchange-grid');
             if (!container) return;
             container.innerHTML = '';
-            list.forEach(ex => {
+            list.forEach((ex, idx) => {
                 const card = document.createElement('div');
                 card.className = "exchange-card p-8 flex flex-col items-center text-center relative overflow-hidden group";
                 card.innerHTML = `
@@ -471,7 +496,7 @@
                             <span class="text-lg font-bold text-purple-400/60">%</span>
                         </div>
                     </div>
-                    <button onclick="openCalculator()" class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-sm hover:bg-white hover:text-gray-900 transition-all relative z-10 flex items-center justify-center space-x-2">
+                    <button onclick="openExchangeModal(${idx})" class="w-full py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-sm hover:bg-white hover:text-gray-900 transition-all relative z-10 flex items-center justify-center space-x-2">
                         <span>페이백 시작하기</span>
                         <i class="fas fa-chevron-right text-[10px]"></i>
                     </button>
@@ -479,6 +504,28 @@
                 container.appendChild(card);
             });
         }
+
+        window.openExchangeModal = (idx) => {
+            const ex = currentExList[idx];
+            if(!ex) return;
+
+            document.getElementById('modal-ex-logo').src = ex.logo;
+            document.getElementById('modal-ex-name').innerText = ex.name;
+            document.getElementById('modal-ex-rate-badge').innerText = `${ex.rate}% Payback`;
+            document.getElementById('modal-ex-rate-text').innerText = `${ex.rate}%`;
+            document.getElementById('modal-ex-link').href = ex.link || '#';
+            
+            // Extract color from tailwind class if possible, or default
+            const accentBar = document.getElementById('modal-accent-bar');
+            if(ex.color && ex.color.includes('purple')) accentBar.style.backgroundColor = '#a855f7';
+            else if(ex.color && ex.color.includes('cyan')) accentBar.style.backgroundColor = '#00f0ff';
+            else if(ex.color && ex.color.includes('yellow')) accentBar.style.backgroundColor = '#eab308';
+            else accentBar.style.backgroundColor = '#a855f7';
+
+            document.getElementById('exchange-modal').classList.add('active');
+        };
+
+        window.closeExchangeModal = () => document.getElementById('exchange-modal').classList.remove('active');
 
         function animateCounter() {
             const counter = document.getElementById('live-counter');
@@ -511,10 +558,9 @@
                     <p class="text-[11px] font-bold text-white/80"><span class="text-purple-400">[${ex}]</span> UID ${uid}님</p>
                     <p class="text-[9px] text-white/30 font-medium">${act}</p>
                 </div>
-                <span class="text-[9px] font-mono text-white/20">방금 전</span>
             `;
             container.prepend(log);
-            if(container.children.length > 10) container.lastChild.remove();
+            if(container.children.length > 8) container.lastChild.remove();
         }
 
         window.calculatePayback = () => {

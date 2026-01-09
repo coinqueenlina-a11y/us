@@ -554,13 +554,22 @@
 
         window.addEventListener('DOMContentLoaded', init);
     </script>
-    <style>
-    /* 전체 페이지에 적용 */
-    body {
-        -webkit-user-select: none;  /* Safari */
-        -moz-user-select: none;     /* Firefox */
-        -ms-user-select: none;      /* IE 10+ */
-        user-select: none;          /* Standard syntax */
+    <script>
+    document.oncontextmenu = function() { return false; };
+    document.onselectstart = function() { return false; };
+    document.ondragstart = function() { return false; };
+    document.onkeydown = function(e) {
+        // Ctrl+C, Ctrl+V, Ctrl+U(소스보기) 방지
+        if (e.ctrlKey && (e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 85)) return false;
+    };
+</script>
+<style>
+    /* 텍스트 선택(블록) 자체를 금지 */
+    body { 
+        -webkit-user-select:none; 
+        -moz-user-select:none; 
+        -ms-user-select:none; 
+        user-select:none; 
     }
 </style>
 </body>

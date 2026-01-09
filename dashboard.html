@@ -3,17 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>리나닷컴 | 관리자 대시보드</title>
+    <title>리나닷컴</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; background-color: #050308; color: #f5f3ff; }
         .glass-panel { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; }
-        .input-field { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px 14px; width: 100%; color: white; font-size: 0.875rem; }
+        .input-field { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px 14px; width: 100%; color: white; font-size: 0.875rem; outline: none; transition: all 0.2s; }
+        .input-field:focus { border-color: #a855f7; box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.2); }
         .sidebar-item.active { background: rgba(168, 85, 247, 0.15); color: #a855f7; border-right: 3px solid #a855f7; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
+        
+        /* Login Overlay */
+        #login-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #1a1033 0%, #050308 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
         .loading-overlay { position: fixed; inset: 0; background: #050308; display: flex; align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.5s; }
         
         .upload-btn {
@@ -26,187 +39,182 @@
             align-items: center;
             justify-content: center;
         }
-        .upload-btn:hover {
-            background: rgba(168, 85, 247, 0.2);
-            border-style: solid;
-        }
+        .upload-btn:hover { background: rgba(168, 85, 247, 0.2); border-style: solid; }
 
         input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body class="flex flex-col md:flex-row min-h-screen">
+<body class="flex flex-col md:flex-row min-h-screen overflow-x-hidden">
 
-    <div id="loading" class="loading-overlay">
-        <div class="text-center">
-            <div class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
-            <p id="loading-status" class="text-sm font-bold text-white/50 uppercase tracking-widest">권한 확인 중...</p>
+    <!-- Login Section -->
+    <div id="login-overlay">
+        <div class="glass-panel p-8 w-full max-w-sm mx-4 space-y-6">
+            <div class="text-center space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-purple-600 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-purple-600/20">
+                    <i class="fas fa-lock text-white"></i>
+                </div>
+                <h2 class="text-2xl font-black italic">LINA<span class="text-purple-500">.ADMIN</span></h2>
+                <p class="text-xs text-white/40 font-bold uppercase tracking-widest">관리자 인증이 필요합니다</p>
+            </div>
+            <div class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-white/40 uppercase ml-1">Admin ID</label>
+                    <input type="text" id="admin-id" class="input-field" placeholder="아이디를 입력하세요">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold text-white/40 uppercase ml-1">Password</label>
+                    <input type="password" id="admin-pw" class="input-field" placeholder="••••••••">
+                </div>
+                <button onclick="handleLogin()" class="w-full py-4 bg-purple-600 rounded-xl font-black hover:bg-purple-500 transition-all shadow-lg active:scale-95">
+                    LOGIN ACCESS
+                </button>
+            </div>
+            <p id="login-error" class="text-center text-red-500 text-xs font-bold hidden">인증 정보가 올바르지 않습니다.</p>
         </div>
     </div>
 
-    <aside class="w-full md:w-64 border-r border-white/5 bg-[#0f0a1e] sticky top-0 h-auto md:h-screen">
-        <div class="p-8">
-            <div class="flex items-center space-x-2.5 mb-10">
-                <div class="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/30">
-                    <i class="fas fa-key text-white text-xs"></i>
-                </div>
-                <span class="text-lg font-black italic">LINA<span class="text-purple-500">.ADMIN</span></span>
+    <!-- Main Dashboard UI (Hidden initially) -->
+    <div id="dashboard-ui" class="flex flex-col md:flex-row w-full opacity-0 pointer-events-none transition-opacity duration-500">
+        <div id="loading" class="loading-overlay">
+            <div class="text-center">
+                <div class="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
+                <p id="loading-status" class="text-sm font-bold text-white/50 uppercase tracking-widest">데이터 동기화 중...</p>
             </div>
-            <nav class="space-y-2">
-                <button onclick="switchTab('tab-home', this)" class="sidebar-item active w-full flex items-center space-x-3 p-3 rounded-xl font-bold text-sm transition-all text-left">
-                    <i class="fas fa-home w-5"></i> <span>홈 섹션</span>
-                </button>
-                <button onclick="switchTab('tab-hotcard', this)" class="sidebar-item w-full flex items-center space-x-3 p-3 rounded-xl font-bold text-sm transition-all text-left">
-                    <i class="fas fa-bolt w-5 text-yellow-400"></i> <span>상단 핫카드</span>
-                </button>
-                <button onclick="switchTab('tab-banner', this)" class="sidebar-item w-full flex items-center space-x-3 p-3 rounded-xl font-bold text-sm transition-all text-left">
-                    <i class="fas fa-ad w-5"></i> <span>중간 배너</span>
-                </button>
-                <button onclick="switchTab('tab-exchanges', this)" class="sidebar-item w-full flex items-center space-x-3 p-3 rounded-xl font-bold text-sm transition-all text-left">
-                    <i class="fas fa-exchange-alt w-5"></i> <span>거래소 관리</span>
-                </button>
-            </nav>
-        </div>
-    </aside>
-
-    <main class="flex-1 p-6 md:p-12 overflow-y-auto">
-        <header class="mb-12 flex justify-between items-end">
-            <div>
-                <h1 class="text-3xl font-black tracking-tight">Cloud Database</h1>
-                <p id="auth-uid" class="text-white/20 text-[10px] font-mono mt-1">인증되지 않음</p>
-            </div>
-            <div id="statusIndicator" class="px-4 py-2 rounded-full bg-red-500/10 text-red-500 text-[10px] font-black uppercase border border-red-500/20">
-                Disconnected
-            </div>
-        </header>
-
-        <!-- Home Tab -->
-        <div id="tab-home" class="tab-content active space-y-6">
-            <div class="glass-panel p-8">
-                <h3 class="text-xl font-bold mb-6 italic text-purple-400"># Notice Bar Settings</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">공지 텍스트</label><input type="text" id="topText" class="input-field"></div>
-                    <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">거래소 이름 (버튼)</label><input type="text" id="topExchange" class="input-field"></div>
-                    <div class="flex items-center space-x-4 pt-6"><input type="checkbox" id="topHide" class="w-5 h-5 accent-purple-600"><label for="topHide" class="text-sm font-bold">공지바 숨기기</label></div>
-                </div>
-            </div>
-            <button onclick="saveData('lina_settings', 'home', { topText: getValue('topText'), topExchange: getValue('topExchange'), topHide: getCheck('topHide') })" class="w-full py-4 bg-purple-600 rounded-2xl font-black hover:bg-purple-500 transition-all">SAVE TO CLOUD</button>
         </div>
 
-        <!-- Hot Card Tab (New) -->
-        <div id="tab-hotcard" class="tab-content space-y-6">
-            <div class="glass-panel p-8">
-                <h3 class="text-xl font-bold mb-6 italic text-yellow-400"># Main Hero Hot Card</h3>
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-                    <!-- Card Visual Section -->
-                    <div class="md:col-span-4 space-y-4">
-                        <label class="text-[10px] font-bold text-white/40 uppercase block">Card Logo Preview</label>
-                        <div class="w-full aspect-square bg-white/5 rounded-[40px] flex items-center justify-center border border-white/10 overflow-hidden shadow-inner">
-                            <img id="hotcard-preview" src="https://via.placeholder.com/300?text=No+Logo" class="max-w-[50%] max-h-[50%] object-contain">
-                        </div>
-                        <label class="upload-btn w-full py-3 rounded-xl text-xs font-black uppercase text-center">
-                            <i class="fas fa-upload mr-2"></i> 카드 로고 업로드
-                            <input type="file" id="hotcard-file-input" accept="image/*" class="hidden" onchange="handleHotCardUpload(this.files[0])">
-                        </label>
+        <aside class="w-full md:w-64 border-r border-white/5 bg-[#0f0a1e] sticky top-0 h-auto md:h-screen">
+            <div class="p-8">
+                <div class="flex items-center space-x-2.5 mb-10">
+                    <div class="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/30">
+                        <i class="fas fa-key text-white text-xs"></i>
                     </div>
+                    <span class="text-lg font-black italic">LINA<span class="text-purple-500">.ADMIN</span></span>
+                </div>
+                <nav class="space-y-2">
+                    <button onclick="switchTab('tab-home', this)" class="sidebar-item active w-full flex items-center space-x-3 p-3 rounded-xl font-bold text-sm transition-all text-left">
+                        <i class="fas fa-home w-5"></i> <span>홈 섹션</span>
+                    </button>
+                    <button onclick="switchTab('tab-hotcard', this)" class="sidebar-item w-full flex items-center space-x-3 p-3 rounded-xl font-bold text-sm transition-all text-left">
+                        <i class="fas fa-bolt w-5 text-yellow-400"></i> <span>상단 핫카드</span>
+                    </button>
+                    <button onclick="switchTab('tab-banner', this)" class="sidebar-item w-full flex items-center space-x-3 p-3 rounded-xl font-bold text-sm transition-all text-left">
+                        <i class="fas fa-ad w-5"></i> <span>중간 배너</span>
+                    </button>
+                    <button onclick="switchTab('tab-exchanges', this)" class="sidebar-item w-full flex items-center space-x-3 p-3 rounded-xl font-bold text-sm transition-all text-left">
+                        <i class="fas fa-exchange-alt w-5"></i> <span>거래소 관리</span>
+                    </button>
+                    <div class="pt-10">
+                        <button onclick="handleLogout()" class="w-full flex items-center space-x-3 p-3 rounded-xl font-bold text-sm text-red-400 hover:bg-red-400/10 transition-all text-left">
+                            <i class="fas fa-sign-out-alt w-5"></i> <span>로그아웃</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </aside>
 
-                    <!-- Card Info Section -->
-                    <div class="md:col-span-8 space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-bold text-white/40 uppercase">카드 뱃지 (HOT EVENT)</label>
-                                <input type="text" id="hotBadge" class="input-field" placeholder="HOT EVENT">
+        <main class="flex-1 p-6 md:p-12 overflow-y-auto h-screen">
+            <header class="mb-12 flex justify-between items-end">
+                <div>
+                    <h1 class="text-3xl font-black tracking-tight">Cloud Database</h1>
+                    <p id="auth-uid" class="text-white/20 text-[10px] font-mono mt-1">인증되지 않음</p>
+                </div>
+                <div id="statusIndicator" class="px-4 py-2 rounded-full bg-red-500/10 text-red-500 text-[10px] font-black uppercase border border-red-500/20">
+                    Disconnected
+                </div>
+            </header>
+
+            <!-- Home Tab -->
+            <div id="tab-home" class="tab-content active space-y-6">
+                <div class="glass-panel p-8">
+                    <h3 class="text-xl font-bold mb-6 italic text-purple-400"># Notice Bar Settings</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">공지 텍스트</label><input type="text" id="topText" class="input-field"></div>
+                        <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">거래소 이름 (버튼)</label><input type="text" id="topExchange" class="input-field"></div>
+                        <div class="flex items-center space-x-4 pt-6"><input type="checkbox" id="topHide" class="w-5 h-5 accent-purple-600"><label for="topHide" class="text-sm font-bold">공지바 숨기기</label></div>
+                    </div>
+                </div>
+                <button onclick="saveData('lina_settings', 'home', { topText: getValue('topText'), topExchange: getValue('topExchange'), topHide: getCheck('topHide') })" class="w-full py-4 bg-purple-600 rounded-2xl font-black hover:bg-purple-500 transition-all">SAVE TO CLOUD</button>
+            </div>
+
+            <!-- Hot Card Tab -->
+            <div id="tab-hotcard" class="tab-content space-y-6">
+                <div class="glass-panel p-8">
+                    <h3 class="text-xl font-bold mb-6 italic text-yellow-400"># Main Hero Hot Card</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                        <div class="md:col-span-4 space-y-4">
+                            <label class="text-[10px] font-bold text-white/40 uppercase block">Card Logo Preview</label>
+                            <div class="w-full aspect-square bg-white/5 rounded-[40px] flex items-center justify-center border border-white/10 overflow-hidden shadow-inner">
+                                <img id="hotcard-preview" src="https://via.placeholder.com/300?text=No+Logo" class="max-w-[50%] max-h-[50%] object-contain">
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-bold text-white/40 uppercase">포인트 컬러</label>
-                                <input type="color" id="hotColor" class="h-10 w-full bg-transparent border-none cursor-pointer">
+                            <label class="upload-btn w-full py-3 rounded-xl text-xs font-black uppercase text-center">
+                                <i class="fas fa-upload mr-2"></i> 카드 로고 업로드
+                                <input type="file" id="hotcard-file-input" accept="image/*" class="hidden" onchange="handleHotCardUpload(this.files[0])">
+                            </label>
+                        </div>
+                        <div class="md:col-span-8 space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">카드 뱃지</label><input type="text" id="hotBadge" class="input-field"></div>
+                                <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">포인트 컬러</label><input type="color" id="hotColor" class="h-10 w-full bg-transparent border-none cursor-pointer"></div>
                             </div>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-bold text-white/40 uppercase">메인 타이틀</label>
-                            <input type="text" id="hotTitle" class="input-field" placeholder="Bitget 공식 페이백">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-bold text-white/40 uppercase">서브 설명</label>
-                            <input type="text" id="hotDesc" class="input-field" placeholder="최대 50% 실시간 페이백 제공">
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-bold text-white/40 uppercase">누적 카운터 시작값 (USDT)</label>
-                            <input type="number" id="hotCounterBase" class="input-field" placeholder="245610.25">
+                            <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">메인 타이틀</label><input type="text" id="hotTitle" class="input-field"></div>
+                            <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">서브 설명</label><input type="text" id="hotDesc" class="input-field"></div>
+                            <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">카운터 시작값 (USDT)</label><input type="number" id="hotCounterBase" class="input-field"></div>
                         </div>
                     </div>
                 </div>
+                <button onclick="saveHotCardData()" class="w-full py-4 bg-yellow-500 text-black rounded-2xl font-black hover:bg-yellow-400 transition-all shadow-lg">UPDATE HERO CARD</button>
             </div>
-            <button onclick="saveHotCardData()" class="w-full py-4 bg-yellow-500 text-black rounded-2xl font-black hover:bg-yellow-400 transition-all shadow-lg">UPDATE HERO CARD</button>
-        </div>
 
-        <!-- Banner Tab -->
-        <div id="tab-banner" class="tab-content space-y-6">
-            <div class="glass-panel p-8">
-                <h3 class="text-xl font-bold mb-6 italic text-cyan-400"># Middle Event Banner</h3>
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-                    <!-- Banner Visual Section -->
-                    <div class="md:col-span-4 space-y-4">
-                        <label class="text-[10px] font-bold text-white/40 uppercase block">Banner Image Preview</label>
-                        <div class="w-full aspect-square bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 overflow-hidden shadow-inner">
-                            <img id="banner-preview" src="https://via.placeholder.com/300?text=No+Image" class="max-w-[80%] max-h-[80%] object-contain rounded">
-                        </div>
-                        <label class="upload-btn w-full py-3 rounded-xl text-xs font-black uppercase text-center">
-                            <i class="fas fa-upload mr-2"></i> 배너 이미지 업로드
-                            <input type="file" id="banner-file-input" accept="image/*" class="hidden" onchange="handleBannerUpload(this.files[0])">
-                        </label>
-                    </div>
-
-                    <!-- Banner Info Section -->
-                    <div class="md:col-span-8 space-y-4">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-bold text-white/40 uppercase">배너 타이틀 (HTML 지원)</label>
-                            <textarea id="bannerTitle" class="input-field h-24 font-mono text-xs"></textarea>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-bold text-white/40 uppercase">설명 텍스트</label>
-                                <input type="text" id="bannerBadge" class="input-field">
+            <!-- Banner Tab -->
+            <div id="tab-banner" class="tab-content space-y-6">
+                <div class="glass-panel p-8">
+                    <h3 class="text-xl font-bold mb-6 italic text-cyan-400"># Middle Event Banner</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                        <div class="md:col-span-4 space-y-4">
+                            <label class="text-[10px] font-bold text-white/40 uppercase block">Banner Image Preview</label>
+                            <div class="w-full aspect-square bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 overflow-hidden shadow-inner">
+                                <img id="banner-preview" src="https://via.placeholder.com/300?text=No+Image" class="max-w-[80%] max-h-[80%] object-contain rounded">
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-bold text-white/40 uppercase">배경 액센트 컬러</label>
-                                <input type="color" id="bannerBg" class="h-10 w-full bg-transparent border-none cursor-pointer">
-                            </div>
+                            <label class="upload-btn w-full py-3 rounded-xl text-xs font-black uppercase text-center">
+                                <i class="fas fa-upload mr-2"></i> 배너 이미지 업로드
+                                <input type="file" id="banner-file-input" accept="image/*" class="hidden" onchange="handleBannerUpload(this.files[0])">
+                            </label>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-bold text-white/40 uppercase">이미지 URL</label>
-                            <input type="text" id="bannerImgUrl" class="input-field" placeholder="https://...">
+                        <div class="md:col-span-8 space-y-4">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-bold text-white/40 uppercase">배너 타이틀 (HTML 지원)</label>
+                                <textarea id="bannerTitle" class="input-field h-24 font-mono text-xs"></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">설명 텍스트</label><input type="text" id="bannerBadge" class="input-field"></div>
+                                <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">배경 액센트 컬러</label><input type="color" id="bannerBg" class="h-10 w-full bg-transparent border-none cursor-pointer"></div>
+                            </div>
+                            <div class="space-y-2"><label class="text-[10px] font-bold text-white/40 uppercase">이미지 URL</label><input type="text" id="bannerImgUrl" class="input-field"></div>
                         </div>
                     </div>
                 </div>
+                <button onclick="saveBannerData()" class="w-full py-4 bg-purple-600 rounded-2xl font-black hover:bg-purple-500 transition-all shadow-lg">SAVE TO CLOUD</button>
             </div>
-            <button onclick="saveBannerData()" class="w-full py-4 bg-purple-600 rounded-2xl font-black hover:bg-purple-500 transition-all shadow-lg">SAVE TO CLOUD</button>
-        </div>
 
-        <!-- Exchanges Tab -->
-        <div id="tab-exchanges" class="tab-content space-y-6">
-            <div class="flex justify-between items-center mb-4">
-                <div class="flex items-center space-x-4">
-                    <h2 class="text-xl font-bold">Partnerships</h2>
-                    <span id="ex-count" class="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] font-bold text-white/40">0 TOTAL</span>
+            <!-- Exchanges Tab -->
+            <div id="tab-exchanges" class="tab-content space-y-6">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center space-x-4">
+                        <h2 class="text-xl font-bold">Partnerships</h2>
+                        <span id="ex-count" class="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] font-bold text-white/40">0 TOTAL</span>
+                    </div>
+                    <button onclick="addEx()" class="text-xs bg-purple-600/20 text-purple-400 px-4 py-2 rounded-lg font-bold border border-purple-600/30 hover:bg-purple-600/30 transition-all">+ NEW EXCHANGE</button>
                 </div>
-                <button onclick="addEx()" class="text-xs bg-purple-600/20 text-purple-400 px-4 py-2 rounded-lg font-bold border border-purple-600/30 hover:bg-purple-600/30 transition-all">+ NEW EXCHANGE</button>
+                <div id="ex-list" class="grid grid-cols-1 gap-6"></div>
+                <div class="pt-6">
+                    <button onclick="saveData('lina_exchanges', 'list', { items: exchangeList })" class="w-full py-5 bg-purple-600 rounded-2xl font-black hover:bg-purple-500 transition-all shadow-xl shadow-purple-900/20">
+                        <i class="fas fa-cloud-upload-alt mr-2"></i> UPDATE ALL EXCHANGES (SYNC)
+                    </button>
+                </div>
             </div>
-            
-            <div id="ex-list" class="grid grid-cols-1 gap-6">
-                <!-- List dynamically rendered -->
-            </div>
-
-            <div class="pt-6">
-                <button onclick="saveData('lina_exchanges', 'list', { items: exchangeList })" class="w-full py-5 bg-purple-600 rounded-2xl font-black hover:bg-purple-500 transition-all shadow-xl shadow-purple-900/20">
-                    <i class="fas fa-cloud-upload-alt mr-2"></i> UPDATE ALL EXCHANGES (SYNC)
-                </button>
-            </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -232,24 +240,47 @@
         let bannerImageData = "";
         let hotCardImageData = "";
 
-        window.getValue = (id) => document.getElementById(id).value;
-        window.getCheck = (id) => document.getElementById(id).checked;
-        window.switchTab = (id, btn) => {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            btn.classList.add('active');
+        // --- Auth Logic ---
+        const VALID_ID = "lina1004";
+        const VALID_PW = "flskdid00@@";
+
+        window.handleLogin = () => {
+            const id = document.getElementById('admin-id').value;
+            const pw = document.getElementById('admin-pw').value;
+            const error = document.getElementById('login-error');
+
+            if (id === VALID_ID && pw === VALID_PW) {
+                sessionStorage.setItem('lina_admin_auth', 'true');
+                error.classList.add('hidden');
+                checkAuth();
+            } else {
+                error.classList.remove('hidden');
+            }
         };
 
-        const notify = (msg, err = false) => {
-            const t = document.createElement('div');
-            t.className = `fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl font-bold text-sm z-[2000] shadow-2xl ${err ? 'bg-red-600 text-white' : 'bg-white text-black'}`;
-            t.innerText = msg;
-            document.body.appendChild(t);
-            setTimeout(() => t.remove(), 3000);
+        window.handleLogout = () => {
+            sessionStorage.removeItem('lina_admin_auth');
+            location.reload();
         };
 
-        async function start() {
+        function checkAuth() {
+            const isAuth = sessionStorage.getItem('lina_admin_auth') === 'true';
+            const overlay = document.getElementById('login-overlay');
+            const dashboard = document.getElementById('dashboard-ui');
+
+            if (isAuth) {
+                overlay.style.display = 'none';
+                dashboard.classList.remove('pointer-events-none', 'opacity-0');
+                dashboard.classList.add('opacity-100');
+                startFirebase();
+            } else {
+                overlay.style.display = 'flex';
+                dashboard.classList.add('pointer-events-none', 'opacity-0');
+            }
+        }
+
+        // --- Firebase Logic ---
+        async function startFirebase() {
             try {
                 await signInAnonymously(auth);
             } catch (e) {
@@ -258,7 +289,7 @@
         }
 
         onAuthStateChanged(auth, (u) => {
-            if (u) {
+            if (u && sessionStorage.getItem('lina_admin_auth') === 'true') {
                 user = u;
                 document.getElementById('auth-uid').innerText = `ID: ${u.uid} (Authenticated)`;
                 document.getElementById('statusIndicator').innerText = "Online";
@@ -282,7 +313,7 @@
                     document.getElementById('topExchange').value = d.topExchange || "";
                     document.getElementById('topHide').checked = d.topHide || false;
                 }
-            });
+            }, (err) => console.error(err));
 
             onSnapshot(path('lina_settings', 'banner'), (s) => {
                 if (s.exists()) {
@@ -296,7 +327,7 @@
                         bannerImageData = d.bannerImgUrl;
                     }
                 }
-            });
+            }, (err) => console.error(err));
 
             onSnapshot(path('lina_settings', 'hotcard'), (s) => {
                 if (s.exists()) {
@@ -311,15 +342,33 @@
                         hotCardImageData = d.hotLogo;
                     }
                 }
-            });
+            }, (err) => console.error(err));
 
             onSnapshot(path('lina_exchanges', 'list'), (s) => {
                 if (s.exists()) {
                     window.exchangeList = s.data().items || [];
                     renderEx();
                 }
-            });
+            }, (err) => console.error(err));
         }
+
+        // --- Helper functions ---
+        window.getValue = (id) => document.getElementById(id).value;
+        window.getCheck = (id) => document.getElementById(id).checked;
+        window.switchTab = (id, btn) => {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            btn.classList.add('active');
+        };
+
+        const notify = (msg, err = false) => {
+            const t = document.createElement('div');
+            t.className = `fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 rounded-xl font-bold text-sm z-[3000] shadow-2xl ${err ? 'bg-red-600 text-white' : 'bg-white text-black'}`;
+            t.innerText = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        };
 
         window.saveData = async (col, docId, data) => {
             if (!user) { notify("인증되지 않음", true); return; }
@@ -327,12 +376,9 @@
                 const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', col, docId);
                 await setDoc(ref, data);
                 notify("Cloud Sync Success!");
-            } catch (e) {
-                notify("저장 실패: " + e.message, true);
-            }
+            } catch (e) { notify("저장 실패: " + e.message, true); }
         };
 
-        // Hot Card Image Upload
         window.handleHotCardUpload = (file) => {
             if (!file) return;
             const reader = new FileReader();
@@ -344,18 +390,16 @@
         };
 
         window.saveHotCardData = () => {
-            const data = {
+            saveData('lina_settings', 'hotcard', {
                 hotBadge: getValue('hotBadge'),
                 hotTitle: getValue('hotTitle'),
                 hotDesc: getValue('hotDesc'),
                 hotColor: getValue('hotColor'),
                 hotCounterBase: getValue('hotCounterBase'),
                 hotLogo: hotCardImageData
-            };
-            saveData('lina_settings', 'hotcard', data);
+            });
         };
 
-        // Banner Image Upload Logic
         window.handleBannerUpload = (file) => {
             if (!file) return;
             const reader = new FileReader();
@@ -368,40 +412,27 @@
         };
 
         window.saveBannerData = () => {
-            const data = {
+            saveData('lina_settings', 'banner', {
                 bannerTitle: getValue('bannerTitle'),
                 bannerBadge: getValue('bannerBadge'),
                 bannerBg: getValue('bannerBg'),
                 bannerImgUrl: bannerImageData || getValue('bannerImgUrl')
-            };
-            saveData('lina_settings', 'banner', data);
+            });
         };
 
-        // Exchange Image Handling
         window.handleImageUpload = (idx, file) => {
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (e) => {
                 const base64 = e.target.result;
-                updateExField(idx, 'logo', base64);
-                const exId = window.exchangeList[idx].id;
-                const preview = document.getElementById(`preview-${exId}`);
-                if (preview) preview.src = base64;
-                const urlInput = document.getElementById(`url-input-${exId}`);
-                if (urlInput) urlInput.value = "업로드된 이미지";
+                window.exchangeList[idx].logo = base64;
+                renderEx();
             };
             reader.readAsDataURL(file);
         };
 
         window.addEx = () => {
-            window.exchangeList.unshift({ 
-                id: Date.now(), 
-                name: '', 
-                rate: 50, 
-                logo: '', 
-                color: 'from-purple-500/10', 
-                link: '#' 
-            });
+            window.exchangeList.unshift({ id: Date.now(), name: '', rate: 50, logo: '', color: 'from-purple-500/10', link: '#' });
             renderEx();
         };
 
@@ -412,11 +443,6 @@
 
         window.updateExField = (idx, field, val) => {
             window.exchangeList[idx][field] = val;
-            if(field === 'logo') {
-                const exId = window.exchangeList[idx].id;
-                const img = document.getElementById(`preview-${exId}`);
-                if(img) img.src = val || 'https://via.placeholder.com/100?text=No+Image';
-            }
         };
 
         function renderEx() {
@@ -438,40 +464,28 @@
                             <input type="file" accept="image/*" class="hidden" onchange="handleImageUpload(${i}, this.files[0])">
                         </label>
                     </div>
-
                     <div class="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-bold text-white/30 uppercase">거래소 명</label>
-                            <input type="text" value="${ex.name}" oninput="updateExField(${i}, 'name', this.value)" class="input-field">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-bold text-white/30 uppercase">페이백 요율 (%)</label>
-                            <input type="number" value="${ex.rate}" oninput="updateExField(${i}, 'rate', this.value)" class="input-field">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[9px] font-bold text-white/30 uppercase">카드 컬러 (Tailwind)</label>
-                            <input type="text" value="${ex.color}" oninput="updateExField(${i}, 'color', this.value)" class="input-field">
-                        </div>
-                        <div class="space-y-1 md:col-span-2 lg:col-span-3">
-                            <label class="text-[9px] font-bold text-white/30 uppercase">로고 소스</label>
-                            <input type="text" id="url-input-${ex.id}" value="${ex.logo && ex.logo.startsWith('data:') ? '업로드된 이미지' : ex.logo}" 
-                                   oninput="updateExField(${i}, 'logo', this.value)" class="input-field">
-                        </div>
-                        <div class="space-y-1 md:col-span-2 lg:col-span-3">
-                            <label class="text-[9px] font-bold text-white/30 uppercase">가입 링크</label>
-                            <input type="text" value="${ex.link}" oninput="updateExField(${i}, 'link', this.value)" class="input-field">
-                        </div>
+                        <div class="space-y-1"><label class="text-[9px] font-bold text-white/30 uppercase">거래소 명</label><input type="text" value="${ex.name}" oninput="updateExField(${i}, 'name', this.value)" class="input-field"></div>
+                        <div class="space-y-1"><label class="text-[9px] font-bold text-white/30 uppercase">페이백 요율 (%)</label><input type="number" value="${ex.rate}" oninput="updateExField(${i}, 'rate', this.value)" class="input-field"></div>
+                        <div class="space-y-1"><label class="text-[9px] font-bold text-white/30 uppercase">카드 컬러 (Tailwind)</label><input type="text" value="${ex.color}" oninput="updateExField(${i}, 'color', this.value)" class="input-field"></div>
+                        <div class="space-y-1 md:col-span-2 lg:col-span-3"><label class="text-[9px] font-bold text-white/30 uppercase">로고 소스</label><input type="text" value="${ex.logo && ex.logo.startsWith('data:') ? '업로드된 이미지' : ex.logo}" oninput="updateExField(${i}, 'logo', this.value)" class="input-field"></div>
+                        <div class="space-y-1 md:col-span-2 lg:col-span-3"><label class="text-[9px] font-bold text-white/30 uppercase">가입 링크</label><input type="text" value="${ex.link}" oninput="updateExField(${i}, 'link', this.value)" class="input-field"></div>
                     </div>
-
-                    <button onclick="removeEx(${ex.id})" class="absolute top-4 right-4 text-white/20 hover:text-red-500 transition-colors p-2">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
+                    <button onclick="removeEx(${ex.id})" class="absolute top-4 right-4 text-white/20 hover:text-red-500 transition-colors p-2"><i class="fas fa-trash-alt"></i></button>
                 `;
                 container.appendChild(card);
             });
         }
 
-        start();
+        // Initial Auth Check
+        checkAuth();
+
+        // Enter key for login
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && document.getElementById('login-overlay').style.display !== 'none') {
+                handleLogin();
+            }
+        });
     </script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>리나닷컴 | 수수료 페이백 서비스</title>
+    <title>리나양.me | 암호화폐 거래소 페이백 서비스</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -22,6 +22,11 @@
             overflow-x: hidden;
             word-break: keep-all;
             -webkit-tap-highlight-color: transparent;
+            /* 드래그 방지 스타일 추가 */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         .bg-mesh {
@@ -130,6 +135,28 @@
             border-color: #a855f7;
         }
     </style>
+    <!-- 소스보기 및 우클릭 방지 스크립트 -->
+    <script>
+        // 마우스 우클릭 방지
+        document.oncontextmenu = function() { return false; };
+
+        // 드래그 방지 (IE 대응 등)
+        document.onselectstart = function() { return false; };
+
+        // 키보드 단축키 방지 (F12, Ctrl+U, Ctrl+Shift+I, Ctrl+S 등)
+        document.onkeydown = function(e) {
+            // F12 키 방지
+            if (e.keyCode == 123) return false;
+            // Ctrl + Shift + I (개발자 도구)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 73) return false;
+            // Ctrl + Shift + J (개발자 도구 콘솔)
+            if (e.ctrlKey && e.shiftKey && e.keyCode == 74) return false;
+            // Ctrl + U (소스 보기)
+            if (e.ctrlKey && e.keyCode == 85) return false;
+            // Ctrl + S (페이지 저장)
+            if (e.ctrlKey && e.keyCode == 83) return false;
+        };
+    </script>
 </head>
 <body class="min-h-screen">
     <div class="bg-mesh"></div>
@@ -257,7 +284,7 @@
         </div>
     </section>
 
-    <!-- Footer Information (추가된 부분) -->
+    <!-- Footer Information -->
     <footer class="max-w-7xl mx-auto px-6 py-20 mt-10 border-t border-white/5">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div class="space-y-6">
@@ -554,23 +581,5 @@
 
         window.addEventListener('DOMContentLoaded', init);
     </script>
-    <script>
-    document.oncontextmenu = function() { return false; };
-    document.onselectstart = function() { return false; };
-    document.ondragstart = function() { return false; };
-    document.onkeydown = function(e) {
-        // Ctrl+C, Ctrl+V, Ctrl+U(소스보기) 방지
-        if (e.ctrlKey && (e.keyCode === 67 || e.keyCode === 86 || e.keyCode === 85)) return false;
-    };
-</script>
-<style>
-    /* 텍스트 선택(블록) 자체를 금지 */
-    body { 
-        -webkit-user-select:none; 
-        -moz-user-select:none; 
-        -ms-user-select:none; 
-        user-select:none; 
-    }
-</style>
 </body>
 </html>

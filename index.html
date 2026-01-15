@@ -25,8 +25,8 @@
     <meta property="twitter:description" content="더 이상 수수료 낭비하지 마세요. 리나닷컴에서 실시간 환급 신청!">
     <meta property="twitter:image" content="https://via.placeholder.com/1200x630/a855f7/ffffff?text=LinaPayback">
 
-    <!-- 구글 서치 콘솔 소유권 확인 태그 (필요 시 content에 키값을 넣으세요) -->
-    <meta name="google-site-verification" content="" />
+    <!-- 구글 서치 콘솔 소유권 확인 태그 적용 완료 -->
+    <meta name="google-site-verification" content="Zsn6Ij5s-MFKygOX5lN2wo6FfU3ed_cKgY6s5PjPxmU" />
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -46,7 +46,6 @@
             overflow-x: hidden;
             word-break: keep-all;
             -webkit-tap-highlight-color: transparent;
-            /* 드래그 방지 스타일 추가 */
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
@@ -161,23 +160,13 @@
     </style>
     <!-- 소스보기 및 우클릭 방지 스크립트 -->
     <script>
-        // 마우스 우클릭 방지
         document.oncontextmenu = function() { return false; };
-
-        // 드래그 방지 (IE 대응 등)
         document.onselectstart = function() { return false; };
-
-        // 키보드 단축키 방지 (F12, Ctrl+U, Ctrl+Shift+I, Ctrl+S 등)
         document.onkeydown = function(e) {
-            // F12 키 방지
             if (e.keyCode == 123) return false;
-            // Ctrl + Shift + I (개발자 도구)
             if (e.ctrlKey && e.shiftKey && e.keyCode == 73) return false;
-            // Ctrl + Shift + J (개발자 도구 콘솔)
             if (e.ctrlKey && e.shiftKey && e.keyCode == 74) return false;
-            // Ctrl + U (소스 보기)
             if (e.ctrlKey && e.keyCode == 85) return false;
-            // Ctrl + S (페이지 저장)
             if (e.ctrlKey && e.keyCode == 83) return false;
         };
     </script>
@@ -339,14 +328,12 @@
                 </div>
                 <div class="text-[11px] text-white/20 space-y-1">
                     <p>© 2025 linayang.me All rights reserved.</p>
-                    <p>Contact: - </p>
                 </div>
             </div>
         </div>
     </footer>
 
     <!-- Modals -->
-    <!-- Exchange Detail Modal -->
     <div id="exchange-modal" class="modal-overlay" onclick="handleOverlayClick(event, 'exchange-modal')">
         <div class="modal-content">
             <div id="modal-accent-bar" class="h-1.5 w-full bg-purple-600"></div>
@@ -366,7 +353,6 @@
                         리나닷컴 공식 파트너십 계정으로 가입 시, 수수료의 <span id="modal-ex-rate-text" class="text-white font-bold">0%</span>를 평생 페이백 받으실 수 있습니다.
                     </p>
                 </div>
-                
                 <div class="space-y-3">
                     <a id="modal-ex-link" href="#" target="_blank" class="block w-full py-4 bg-purple-600 rounded-xl sm:rounded-2xl font-black text-center text-[15px] shadow-xl active:scale-95 transition-transform">계정 만들기 (페이백 적용)</a>
                     <button onclick="closeExchangeModal(); openCalculator();" class="block w-full py-4 bg-white/5 border border-white/10 rounded-xl sm:rounded-2xl font-black text-center text-[15px] hover:bg-white/10 active:scale-95 transition-all text-white/80">
